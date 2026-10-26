@@ -5,6 +5,9 @@ __pycache__/
 venv/
 node_modules/
 review-output/
+reviewer-overview.html
+reviewer-overview.md
+!assets/reviewer-overview.html
 code-breakdown.md
 code-breakdown.html
 !assets/code-breakdown.html

@@ -1,4 +1,4 @@
 interface:
   display_name: "Simple Reviewer · 简单的审阅者1.0"
-  short_description: "生成离线 HTML 图文拆解，说明板块作用、源码位置与实际生效证据"
-  default_prompt: "使用 $simple-reviewer-v1 检查刚刚的代码，生成 HTML 图文拆解和文字版，逐块展示输入输出、作用、源码位置及实际验证结果，并用彩色流程图突出问题。"
+  short_description: "解释 Vibe Coding 目标与改动，生成离线图解并按证据复核结果"
+  default_prompt: "使用 $simple-reviewer-v1 审阅当前 Vibe Coding 成果，生成审阅总览、HTML 图文拆解和文字版。先说明目标与 AI 改动，再逐块展示职责、位置、实际验证、风险和下一步，并用彩色流程图突出问题。"

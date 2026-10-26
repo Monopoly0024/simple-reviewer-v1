@@ -1,57 +1,79 @@
-<?xml version="1.0" encoding="utf-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="360" height="1110" viewBox="0 0 360 1110" role="img" aria-labelledby="title desc">
-  <title id="title">Simple Reviewer: understand AI-written code</title>
-  <desc id="desc">Mobile overview. Provide code and goals, map blocks, explain responsibilities, verify behavior, and record status. Default outputs are HTML and Markdown explanations. Full reports are optional. Unchecked paths remain explicit.</desc>
-  <defs>
-    <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
-      <path d="M0 0L8 4L0 8Z" fill="#698173" />
-    </marker>
-    <style>
-      text{font-family:"Segoe UI","Microsoft YaHei",sans-serif;fill:#203b30}
-      .heading{font-size:25px;font-weight:700}
-      .title{font-size:22px;font-weight:700}
-      .body{font-size:20px;fill:#405b4d}
-      .num{font-size:20px;font-weight:700;fill:#176549}
-      .card{fill:#fff;stroke:#c9d6cb;stroke-width:1.5}
-      .flow{fill:none;stroke:#698173;stroke-width:2;marker-end:url(#arrow)}
-    </style>
-  </defs>
-  <rect width="360" height="1110" rx="20" fill="#f4f6f0" />
-  <text x="24" y="45" class="heading">Understand AI code</text>
-  <text x="24" y="79" class="body">Simple Reviewer / Vibe Coding</text>
-  <rect x="16" y="106" width="328" height="100" rx="14" fill="#e6f1f4" stroke="#8cb5c2" stroke-width="1.5" />
-  <text x="34" y="143" class="title">Provide code + your goals</text>
-  <text x="34" y="177" class="body">A file, project, or recent change</text>
-  <path d="M180 210V233" class="flow" />
-  <rect x="16" y="246" width="328" height="82" rx="14" class="card" />
-  <text x="34" y="281" class="num">01</text>
-  <text x="76" y="281" class="title">Map code blocks</text>
-  <text x="34" y="312" class="body">Find entry points and data flow</text>
-  <path d="M180 332V355" class="flow" />
-  <rect x="16" y="368" width="328" height="82" rx="14" class="card" />
-  <text x="34" y="403" class="num">02</text>
-  <text x="76" y="403" class="title">Explain each block</text>
-  <text x="34" y="434" class="body">Show inputs, outputs, and source</text>
-  <path d="M180 454V477" class="flow" />
-  <rect x="16" y="490" width="328" height="82" rx="14" class="card" />
-  <text x="34" y="525" class="num">03</text>
-  <text x="76" y="525" class="title">Verify behavior</text>
-  <text x="34" y="556" class="body">Run checks against your goals</text>
-  <path d="M180 576V599" class="flow" />
-  <rect x="16" y="612" width="328" height="82" rx="14" class="card" />
-  <text x="34" y="647" class="num">04</text>
-  <text x="76" y="647" class="title">Record review status</text>
-  <text x="34" y="678" class="body">Link evidence and state the scope</text>
-  <path d="M180 698V721" class="flow" />
-  <rect x="16" y="734" width="328" height="166" rx="14" fill="#e6f0e8" stroke="#82aa8d" stroke-width="1.5" />
-  <text x="34" y="772" class="title">Default: two explanations</text>
-  <path d="M34 790H326" stroke="#b4cbb8" />
-  <text x="34" y="825" class="title">Illustrated HTML guide</text>
-  <text x="34" y="859" class="title">Markdown companion</text>
-  <text x="34" y="886" class="body">Roles, locations, and evidence</text>
-  <rect x="16" y="922" width="328" height="94" rx="14" fill="#fff3dc" stroke="#cda65a" stroke-width="1.5" />
-  <text x="34" y="959" class="title">Optional: full review</text>
-  <text x="34" y="992" class="body">Overview + effective record</text>
-  <text x="24" y="1053" class="body">Cannot run it? Mark unchecked.</text>
-  <text x="24" y="1085" class="body">A local pass is not a full pass.</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="390" height="1790" viewBox="0 0 390 1790" role="img" aria-labelledby="title desc">
+<title id="title">Simple Reviewer: Understand what your AI actually built.</title>
+<desc id="desc">Goals, changes, code map, verification, risks and next actions. HTML, Markdown and effective review record.</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#5b6c4c"/></marker></defs>
+<style>text{font-family:"Segoe UI","Microsoft YaHei",sans-serif;fill:#262626}.hero{font-size:28px;font-weight:800;letter-spacing:-1px}.title{font-size:23px;font-weight:750}.body{font-size:18px;fill:#56614e}.small{font-size:16px;fill:#60685d}.white{font-size:26px;font-weight:750;fill:#fff}.num{font-size:18px;font-weight:800;fill:#d5ff70}.flow{fill:none;stroke:#5b6c4c;stroke-width:2;marker-end:url(#arrow)}</style>
+<rect x="0" y="0" width="390" height="1790" rx="25" fill="#fdfff7" stroke="#fdfff7"/>
+<text x="22" y="42" class="title">Simple Reviewer</text>
+<text x="22" y="72" class="small">Vibe Coding / 1.2.0</text>
+<text x="22" y="120" class="hero">Understand your code.</text>
+<text x="22" y="157" class="hero">Choose your next step.</text>
+<rect x="18" y="188" width="354" height="112" rx="20" fill="#20241f" stroke="#20241f"/>
+<text x="36" y="224" class="white">Code + goals + questions</text>
+<text x="36" y="255" class="small" style="fill:#d6e2ca">Start with ordinary words.</text>
+<text x="36" y="282" class="small" style="fill:#d6e2ca">No coding vocabulary needed.</text>
+<path d="M195 305V324" class="flow"/>
+<rect x="18" y="332" width="354" height="118" rx="20" fill="#fff" stroke="#dfe3d7"/>
+<rect x="34" y="347" width="38" height="31" rx="16" fill="#20241f" stroke="#20241f"/>
+<text x="42" y="369" class="num">01</text>
+<text x="83" y="370" class="title">Clarify the goal</text>
+<text x="34" y="407" class="small">Turn intent into observable checks.</text>
+<text x="34" y="433" class="small">Keep assumptions and questions visible.</text>
+<path d="M195 450V469" class="flow"/>
+<rect x="18" y="477" width="354" height="118" rx="20" fill="#fff" stroke="#dfe3d7"/>
+<rect x="34" y="492" width="38" height="31" rx="16" fill="#20241f" stroke="#20241f"/>
+<text x="42" y="514" class="num">02</text>
+<text x="83" y="515" class="title">Explain the changes</text>
+<text x="34" y="552" class="small">What changed? What will users see?</text>
+<text x="34" y="578" class="small">Compare files against a named baseline.</text>
+<path d="M195 595V614" class="flow"/>
+<rect x="18" y="622" width="354" height="118" rx="20" fill="#fff" stroke="#dfe3d7"/>
+<rect x="34" y="637" width="38" height="31" rx="16" fill="#20241f" stroke="#20241f"/>
+<text x="42" y="659" class="num">03</text>
+<text x="83" y="660" class="title">Map the code</text>
+<text x="34" y="697" class="small">Explain inputs, duties, and outputs.</text>
+<text x="34" y="723" class="small">Show files, symbols, and line numbers.</text>
+<path d="M195 740V759" class="flow"/>
+<rect x="18" y="767" width="354" height="118" rx="20" fill="#fff" stroke="#dfe3d7"/>
+<rect x="34" y="782" width="38" height="31" rx="16" fill="#20241f" stroke="#20241f"/>
+<text x="42" y="804" class="num">04</text>
+<text x="83" y="805" class="title">Verify the behavior</text>
+<text x="34" y="842" class="small">Run independent, relevant checks.</text>
+<text x="34" y="868" class="small">Record actual results and limitations.</text>
+<path d="M195 885V904" class="flow"/>
+<rect x="18" y="912" width="354" height="118" rx="20" fill="#fff" stroke="#dfe3d7"/>
+<rect x="34" y="927" width="38" height="31" rx="16" fill="#20241f" stroke="#20241f"/>
+<text x="42" y="949" class="num">05</text>
+<text x="83" y="950" class="title">Surface the risks</text>
+<text x="34" y="987" class="small">Data, keys, permissions, cost.</text>
+<text x="34" y="1013" class="small">Say what ran and what is unknown.</text>
+<path d="M195 1030V1049" class="flow"/>
+<rect x="18" y="1057" width="354" height="118" rx="20" fill="#fff" stroke="#dfe3d7"/>
+<rect x="34" y="1072" width="38" height="31" rx="16" fill="#20241f" stroke="#20241f"/>
+<text x="42" y="1094" class="num">06</text>
+<text x="83" y="1095" class="title">Choose the next step</text>
+<text x="34" y="1132" class="small">One clear action at a time.</text>
+<text x="34" y="1158" class="small">Recheck affected paths after a fix.</text>
+<rect x="18" y="1216" width="354" height="106" rx="20" fill="#edf4e0" stroke="#dfe3d7"/>
+<text x="34" y="1248" class="title">Read the overview</text>
+<text x="34" y="1278" class="small">reviewer-overview.html / .md</text>
+<text x="34" y="1304" class="small">Goals, changes, checks, risks, next steps</text>
+<rect x="18" y="1339" width="354" height="106" rx="20" fill="#fff" stroke="#dfe3d7"/>
+<text x="34" y="1371" class="title">Explore the code</text>
+<text x="34" y="1401" class="small">code-breakdown.html / .md</text>
+<text x="34" y="1427" class="small">Block map, source locations, evidence</text>
+<rect x="18" y="1462" width="354" height="106" rx="20" fill="#fff" stroke="#dfe3d7"/>
+<text x="34" y="1494" class="title">Keep the record</text>
+<text x="34" y="1524" class="small">report.html / .md + effective JSON</text>
+<text x="34" y="1550" class="small">Full review and snapshot for rechecking</text>
+<circle cx="30" cy="1624" r="6" fill="#21804e"/>
+<text x="44" y="1630" class="small">Verified in scope</text>
+<circle cx="210" cy="1624" r="6" fill="#bd3434"/>
+<text x="224" y="1630" class="small">Confirmed issue</text>
+<circle cx="30" cy="1666" r="6" fill="#b58019"/>
+<text x="44" y="1672" class="small">Pending</text>
+<circle cx="210" cy="1666" r="6" fill="#858b92"/>
+<text x="224" y="1672" class="small">Unchecked</text>
+<text x="22" y="1730" class="small">Colors show verification states.</text>
+<text x="22" y="1758" class="small">A workflow is not a test result.</text>
 </svg>

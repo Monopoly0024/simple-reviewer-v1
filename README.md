@@ -14,6 +14,19 @@ Use it after a Vibe Coding session, when inheriting unfamiliar AI-generated code
 
 **Themes:** AI-assisted coding · Vibe Coding · code explanation · evidence-based review.
 
+## Built for people who do not write code every day
+
+Vibe Coding is fast, but a working-looking result can still hide an unclear requirement, an untested path, or a risky side effect. Simple Reviewer 1.2 adds a plain-language control layer around the coding session:
+
+1. **Clarify the goal** — turn a natural-language request into observable acceptance criteria, assumptions, and open questions.
+2. **Explain the change** — translate the AI's file and code changes into user-visible behavior and possible impacts.
+3. **Read the implementation** — map functional blocks, inputs, outputs, source locations, and connected paths.
+4. **Verify behavior** — connect each goal to an independent check and record what actually happened.
+5. **Surface risks** — explain concrete data, credentials, external-service, cost, permission, or deployment effects and whether the action actually ran.
+6. **Choose the next step** — give one to three specific follow-up checks or fixes, with a reason for each.
+
+The report keeps these statements separate: code exists, a local check passed, a real user path worked, and the original goal is complete. A fluent explanation is not evidence by itself.
+
 ## How it works
 
 <picture>
@@ -29,7 +42,10 @@ Provide your code and intended outcome. The skill maps functional blocks, explai
 | --- | --- | --- |
 | Default | `code-breakdown.html` | Illustrated explanation, block navigation, source excerpts, and verification evidence |
 | Default | `code-breakdown.md` | Responsibilities, code locations, findings, and limitations in a text document |
-| Optional full review | `report.html`, `report.md`, `review.effective.json` | Review overview, requirements acceptance, and the effective review record |
+| Full review entry | `reviewer-overview.html`, `reviewer-overview.md` | Goals, changes, acceptance, risks, and next actions in plain language |
+| Full review record | `report.html`, `report.md`, `review.effective.json` | Detailed audit, requirements acceptance, and the effective review record |
+
+The HTML report is organized like a small review workspace: the goal and current verdict come first, followed by change summary, functional blocks, verification evidence, risks, and next actions. Technical details remain expandable so a new user can read the conclusion before opening source code.
 
 **Colors describe verification status, not a quality score:** green means verified within the recorded scope; red means a confirmed issue; yellow means pending verification; gray means unchecked. Static reading does not count as a successful runtime check. Missing runtime access is recorded explicitly.
 
@@ -41,6 +57,8 @@ Provide your code and intended outcome. The skill maps functional blocks, explai
 - Connect findings to actual observations, evidence, and verification limits.
 - Read offline HTML reports with diagrams, keyboard navigation, expandable source, filtering, and print support.
 - Detect changes to registered source files and evidence logs with SHA-256 snapshots; stale evidence requires revalidation.
+- Produce a beginner-friendly goal brief, change summary, evidence matrix, risk notes, and next-action checklist when the reviewing agent has enough information to record them.
+- Explain technical terms in two layers: a plain-language answer first, then the file, symbol, line range, and source excerpt.
 
 The generator validates and displays an authored review record. It does not execute recorded commands or discover semantic defects on its own. The reviewing agent reads the code, performs appropriate checks, and records the results.
 
@@ -62,7 +80,22 @@ an HTML breakdown with a Markdown companion. Review only; do not change the code
 
 You do not need to repeat this wording exactly. The skill currently defaults to Simplified Chinese for explanations and reports; request English explicitly when needed. This bilingual README does not change that default.
 
-Tool version: **1.1.0**. Invocation: `$simple-reviewer-v1`. Display name: **Simple Reviewer · 简单的审阅者1.0**. Update the complete installed directory to include the generator and templates; updating `SKILL.md` alone is insufficient. Further Chinese documentation: [usage guide](使用说明.md) and [review record contract](references/report-contract.md).
+Tool version: **1.2.0**. Invocation: `$simple-reviewer-v1`. Display name: **Simple Reviewer · 简单的审阅者1.0**. Update the complete installed directory to include the generator and templates; updating `SKILL.md` alone is insufficient. Further Chinese documentation: [usage guide](使用说明.md) and [review record contract](references/report-contract.md).
+
+### A practical Vibe Coding review card
+
+For a request such as “let users upload an Excel file and show the number of valid and invalid rows,” the skill should make the hidden checks visible:
+
+| Review card | Plain-language question | Evidence to record |
+| --- | --- | --- |
+| Goal brief | What should the user be able to do? | Original request, assumptions, open questions |
+| Acceptance | What result would count as working? | Input, action, expected visible result |
+| Change summary | What did the AI change? | Added, modified, deleted files and user-visible effects |
+| Verification | What did we actually try? | Command or user action, observation, scope, exit code or screenshot |
+| Risk | Could this delete data, expose a key, cost money, or change permissions? | Risk action, whether it ran, impact and safe next step |
+| Next action | What is the smallest useful thing to do now? | One to three concrete checks or a targeted fix |
+
+The report uses green, red, yellow, and gray for verification state. It distinguishes actual execution from static reading, states the covered scope, and marks stale evidence. A static reading or a passing unit test never silently becomes full goal completion.
 
 To update an existing installation, run `powershell -NoProfile -File scripts/sync-installed-skill.ps1` from this checkout. It installs and hash-verifies the complete skill, archives the previous installation outside the active skills directory, and preserves the old files as a backup. Open a new Codex conversation to use the new invocation.
 
@@ -77,7 +110,9 @@ python -B scripts/reviewer_report.py breakdown assets/review.example.json --out 
 python -B scripts/reviewer_report.py render assets/review.example.json --out review-output
 ```
 
-Open `review-output/code-breakdown.html` for the illustrated explanation. `breakdown` produces HTML and Markdown; `render` additionally produces the full review files. Existing schema `1.0` records remain supported.
+Open `review-output/reviewer-overview.html` after `render` for the plain-language entry, then explore `code-breakdown.html`. `breakdown` produces only the two explanation files; `render` produces all seven files listed above. Existing schema `1.0` records remain supported. Optional context is authored by the reviewer; the generator does not infer AI changes or execute checks.
+
+The visual direction combines Open Design's homepage reading hierarchy with its Arena page's comparison and grouping patterns, using the requested `ai-website-cloner-template` inspection workflow. It is adapted for offline code review: original report content, system fonts, local links, and evidence-state colors. It does not reproduce Open Design's branding, illustrations, rankings, or hosted services. See [the design notes](docs/superpowers/specs/2026-10-26-reviewer-1.2-design.md).
 
 The bundled order-export example deliberately contains a pagination bug: exporting more than 20 matching orders loses records. Rebuild its reproducible evidence with:
 
@@ -93,6 +128,8 @@ Optional browser checks require Node.js and Playwright; the report generator doe
 npm install --no-save --package-lock=false playwright@1.56.1
 npx playwright install chromium
 node scripts/test_breakdown_browser.cjs review-output/code-breakdown.html review-output/browser
+node scripts/test_overview_browser.cjs review-output/reviewer-overview.html review-output/overview-browser
+node scripts/test_workflow_browser.cjs
 ```
 
 CI runs Python tests on Windows and Linux and checks the illustrated report in Chromium, including source expansion, keyboard navigation, filtering, offline requests, and 390/700/1024px layouts. The example reports and screenshots are attached to Actions runs.
@@ -134,7 +171,8 @@ No open-source license is currently included. Rights and reuse permissions remai
 | --- | --- | --- |
 | 默认生成 | `code-breakdown.html` | 图文拆解、板块导航、源码与验证证据 |
 | 默认生成 | `code-breakdown.md` | 板块职责、代码位置、结论与限制的文字版 |
-| 可选完整报告 | `report.html`、`report.md`、`review.effective.json` | 审查总览、需求验收和有效记录 |
+| 完整审阅入口 | `reviewer-overview.html`、`reviewer-overview.md` | 用日常语言说明目标、变更、验收、风险和下一步 |
+| 完整审阅记录 | `report.html`、`report.md`、`review.effective.json` | 详细审计、需求验收和有效记录 |
 
 **颜色表示检查状态，不是文件质量评分：** 绿色为在所记录范围内实际验证通过，红色为有证据确认的问题，黄色为待核实，灰色为尚未验证。缺少运行条件时会明确说明，不会把静态阅读说成运行通过。
 
@@ -184,9 +222,40 @@ python -B assets/order-export/build_example.py
 
 示例报告不是其他项目的检查结果。
 
-打开 `review-output/code-breakdown.html` 看图文拆解。`breakdown` 输出 HTML 和 Markdown 两个独立文件；`render` 再附总审查报告和有效记录。现有 `review.json` 兼容，缺少图文补充字段时仍自动生成输入输出图、源码与证据卡。
+完整审阅后先打开 `review-output/reviewer-overview.html`，再进入 `code-breakdown.html` 看详细图解。`breakdown` 输出 HTML 和 Markdown 两文件；`render` 输出上表全部七文件。现有 schema `1.0` 记录兼容；缺少补充信息时明确显示缺口。变更说明由审查者基于实际基线填写，生成器不会自行推断 AI 改动或执行检查。
 
-当前工具版本为 **1.1.0**，skill 调用名为 `$simple-reviewer-v1`，界面名为“Simple Reviewer · 简单的审阅者1.0”。更新时用仓库完整内容替换原安装目录；仅下载单个 `SKILL.md` 不会更新模板和生成器。生成页面可能含源码与本地路径，请按项目约定保存和分享。
+视觉混合参考 Open Design 首页的阅读层级与 Arena 页的信息分组，并采用指定的 `ai-website-cloner-template` 检视流程，按离线代码审阅场景调整。报告使用自己的内容、系统字体、本地链接和证据状态色；设计对应关系见[设计说明](docs/superpowers/specs/2026-10-26-reviewer-1.2-design.md)。
+
+当前工具版本为 **1.2.0**，skill 调用名为 `$simple-reviewer-v1`，界面名为“Simple Reviewer · 简单的审阅者1.0”。更新时用仓库完整内容替换原安装目录；仅下载单个 `SKILL.md` 不会更新模板和生成器。生成页面可能含源码与本地路径，请按项目约定保存和分享。
+
+## 面向不懂代码用户的 Vibe Coding 保护层
+
+很多问题不是代码完全不能运行，而是“需求没有说清楚”“改了什么不知道”“测试通过但真实使用不对”或“AI 顺手执行了有影响的操作”。1.2 版的审阅顺序因此固定为：
+
+```text
+我想要什么
+    ↓
+AI 改了什么
+    ↓
+代码各板块负责什么
+    ↓
+我实际检查了什么
+    ↓
+哪里仍然不能确认
+    ↓
+现在下一步做什么
+```
+
+报告会尽量生成以下内容：
+
+- **需求翻译卡**：保留用户原话，整理可观察的验收条件、假设和待确认问题。
+- **目标验收矩阵**：把需求、检查动作、预期结果、实际结果、证据和状态连起来。
+- **AI 改动说明**：说明新增、修改、删除了哪些文件，以及用户能够看到的变化和潜在影响。
+- **双层代码解释**：先用日常语言说明“这部分负责什么”，再提供符号、行号、调用关系和源码片段。
+- **风险提示**：单独标出删除数据、密钥、外部服务、费用、权限、上传和部署等高影响动作。
+- **下一步卡片**：给出一到三个最小可执行的检查或修复动作，避免用户只能继续把错误原样丢给 AI。
+
+没有目标、运行环境或独立证据时，报告会明确显示“未验证”，不会用“看起来合理”代替完成结论。
 
 已有安装可在此仓库运行 `powershell -NoProfile -File scripts/sync-installed-skill.ps1`：脚本安装完整新版并校验文件哈希，将旧安装备份到启用中的 skills 目录之外。旧文件会保留为备份。新开 Codex 对话后使用新调用名。
 
@@ -196,6 +265,8 @@ python -B assets/order-export/build_example.py
 npm install --no-save --package-lock=false playwright@1.56.1
 npx playwright install chromium
 node scripts/test_breakdown_browser.cjs review-output/code-breakdown.html review-output/browser
+node scripts/test_overview_browser.cjs review-output/reviewer-overview.html review-output/overview-browser
+node scripts/test_workflow_browser.cjs
 ```
 
 CI 在 Windows/Linux 运行 Python 测试，并在 Chromium 检查源码展开、键盘跳转、筛选、390/700/1024px 宽度及离线请求；订单示例 HTML 和截图随 Actions 产物保存。

@@ -12,6 +12,22 @@ python <skill目录>/scripts/reviewer_report.py render <review.json> --out <审�
 
 ## 顶层与路径
 
+工具 1.2.0 沿用 schema `1.0`。`breakdown` 生成 `code-breakdown.html/.md` 两文件；`render` 再生成 `reviewer-overview.html/.md`、`report.html/.md` 和 `review.effective.json`，共七文件。总览、图解和完整报告使用同一次证据评估结果。
+
+## 可选的日常语言上下文
+
+这些字段由审查者依据用户原话、实际 Git 比较与检查记录填写。生成器只校验和展示，不能自动分析 AI 改动、执行测试或判断这些描述是否真实。缺少字段时显示信息缺口。
+
+- `user_goal`：对象；可含字符串 `original_request`、`plain_language`，字符串数组 `acceptance_criteria`、`assumptions`、`open_questions`。补充验收描述不替代 `requirements` 中的正式验收条件；非空待确认问题会阻止总体通过，已有确定问题仍显示失败。
+- `change_summary`：对象；可含字符串 `baseline`，字符串数组 `files_added`、`files_modified`、`files_deleted`、`user_visible_changes`、`possible_impacts`。文件路径须位于项目内；已删除文件无需仍存在。没有可比较基线时明确写出限制，不能编造“刚刚 AI 修改”。
+- `risks`：数组；每项必填非空字符串 `title`、`action`、`status`、`impact`、`next_step`。`status` 仅支持 `observed`（动作已发生）、`not-run`（尚未执行）、`mitigated`（已登记缓解措施）、`unknown`（执行状态待确认）。这些是动作记录状态，不是验证通过状态，也不是自动发现的安全漏洞。若风险已造成确定缺陷，另在 `issues/evidence` 中登记。
+- `next_actions`：数组；每项必填非空字符串 `action`、`reason`。建议保持一至三个明确动作。
+- `comprehension`：对象；可含 `glossary` 数组，每项必填非空字符串 `term`、`meaning`，只解释本次报告实际用到的术语。
+
+全部 HTML 文本转义，正文不会作为脚本执行。补充文案不授予绿色状态；通过仍要求原有运行证据与范围规则。记录不含上述字段时仍可生成全部产物，不声称目标、AI 改动或风险已知。字段不使用时省略；显式填写 `null` 会作为类型错误拒绝。
+
+## 必填顶层与路径
+
 - `schema_version`：`"1.0"`。
 - `title`：用户可读标题；`reviewed_at`：带时区的 ISO 日期时间。
 - `mode`：`review` / `review-and-fix`。
@@ -24,7 +40,7 @@ python <skill目录>/scripts/reviewer_report.py render <review.json> --out <审�
 
 ## 独立代码拆解文件与板块 blocks
 
-从工具版本 1.1.0 起，`breakdown` 生成 `code-breakdown.html` 和 `code-breakdown.md`；`render` 再生成 `report.md`、`report.html`、`review.effective.json`。返回路径新增键 `breakdown_html`，原 `breakdown` 仍指 Markdown。记录 schema_version 保持 `1.0`，旧记录可直接使用。两种方式使用同一有效证据判定，独立文件不需要打开总报告即可阅读。
+从工具版本 1.1.0 起，`breakdown` 生成 `code-breakdown.html` 和 `code-breakdown.md`。工具 1.2.0 的 `render` 再生成 `reviewer-overview.html/.md`、`report.html/.md` 和 `review.effective.json`。返回路径中 `breakdown_html` 指 HTML，原 `breakdown` 仍指 Markdown，`overview_html` 与 `overview` 分别指总览 HTML 和 Markdown。记录 schema_version 保持 `1.0`，旧记录可直接使用。两种方式使用同一有效证据判定，独立拆解文件不需要打开总览即可阅读。
 
 每板块：`id, title, purpose, node_ids`。ID 为 B1、B2…；title 是功能名称，purpose 说明整体职责，node_ids 包含属于此板块的节点。一板块可对应多个节点或多个文件。每个审查节点恰好归入一个主板块；跨板块调用仍用 edges 表达。板块覆盖本次全部已审查节点，但不自动代表全部项目源码。
 

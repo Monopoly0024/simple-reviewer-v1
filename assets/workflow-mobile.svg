@@ -1,62 +1,79 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="360" height="1110" viewBox="0 0 360 1110" role="img" aria-labelledby="title desc">
-  <title id="title">简单的审阅者：从代码到图文拆解</title>
-  <desc id="desc">手机阅读简版。输入代码和目标，拆解板块、解释作用、验证行为、标记状态，默认生成 HTML 图文拆解及 Markdown 文字版，可选生成完整审查报告。运行条件不足时保留未验证状态。</desc>
-  <defs>
-    <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#698173"/></marker>
-    <style>
-      text{font-family:"Segoe UI","Microsoft YaHei",sans-serif;fill:#203b30}
-      .heading{font-size:25px;font-weight:700}
-      .title{font-size:22px;font-weight:700}
-      .body{font-size:20px;fill:#405b4d}
-      .num{font-size:20px;font-weight:700;fill:#176549}
-      .card{fill:#fff;stroke:#c9d6cb;stroke-width:1.5}
-      .flow{fill:none;stroke:#698173;stroke-width:2;marker-end:url(#arrow)}
-    </style>
-  </defs>
-  <rect width="360" height="1110" rx="20" fill="#f4f6f0"/>
-  <text x="24" y="45" class="heading">从代码，到看得懂的结果</text>
-  <text x="24" y="79" class="body">简单的审阅者 · 使用流程</text>
-
-  <rect x="16" y="106" width="328" height="100" rx="14" fill="#e6f1f4" stroke="#8cb5c2" stroke-width="1.5"/>
-  <text x="34" y="143" class="title">输入代码 + 你的目标</text>
-  <text x="34" y="177" class="body">文件 / 项目 / 最近的改动</text>
-  <path d="M180 210V233" class="flow"/>
-
-  <rect x="16" y="246" width="328" height="82" rx="14" class="card"/>
-  <text x="34" y="281" class="num">01</text>
-  <text x="76" y="281" class="title">拆解代码板块</text>
-  <text x="34" y="312" class="body">梳理入口、逻辑与数据流</text>
-  <path d="M180 332V355" class="flow"/>
-
-  <rect x="16" y="368" width="328" height="82" rx="14" class="card"/>
-  <text x="34" y="403" class="num">02</text>
-  <text x="76" y="403" class="title">解释作用与位置</text>
-  <text x="34" y="434" class="body">说明输入输出，标明源码</text>
-  <path d="M180 454V477" class="flow"/>
-
-  <rect x="16" y="490" width="328" height="82" rx="14" class="card"/>
-  <text x="34" y="525" class="num">03</text>
-  <text x="76" y="525" class="title">验证实际行为</text>
-  <text x="34" y="556" class="body">对照目标，执行适用检查</text>
-  <path d="M180 576V599" class="flow"/>
-
-  <rect x="16" y="612" width="328" height="82" rx="14" class="card"/>
-  <text x="34" y="647" class="num">04</text>
-  <text x="76" y="647" class="title">标记状态与问题</text>
-  <text x="34" y="678" class="body">关联证据，注明验证范围</text>
-  <path d="M180 698V721" class="flow"/>
-
-  <rect x="16" y="734" width="328" height="166" rx="14" fill="#e6f0e8" stroke="#82aa8d" stroke-width="1.5"/>
-  <text x="34" y="772" class="title">默认产出 · 两份拆解</text>
-  <path d="M34 790H326" stroke="#b4cbb8"/>
-  <text x="34" y="825" class="title">HTML 图文拆解</text>
-  <text x="34" y="859" class="title">Markdown 文字版</text>
-  <text x="34" y="886" class="body">职责、位置、结论与证据</text>
-
-  <rect x="16" y="922" width="328" height="94" rx="14" fill="#fff3dc" stroke="#cda65a" stroke-width="1.5"/>
-  <text x="34" y="959" class="title">可选产出 · 完整报告</text>
-  <text x="34" y="992" class="body">审查总览 + 有效记录</text>
-
-  <text x="24" y="1053" class="body">无运行条件：标明未验证</text>
-  <text x="24" y="1085" class="body">局部通过 ≠ 全部目标完成</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="390" height="1790" viewBox="0 0 390 1790" role="img" aria-labelledby="title desc">
+<title id="title">Simple Reviewer: 看懂 AI 写了什么，再决定下一步。</title>
+<desc id="desc">Goals, changes, code map, verification, risks and next actions. HTML, Markdown and effective review record.</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#5b6c4c"/></marker></defs>
+<style>text{font-family:"Segoe UI","Microsoft YaHei",sans-serif;fill:#262626}.hero{font-size:28px;font-weight:800;letter-spacing:-1px}.title{font-size:23px;font-weight:750}.body{font-size:18px;fill:#56614e}.small{font-size:16px;fill:#60685d}.white{font-size:26px;font-weight:750;fill:#fff}.num{font-size:18px;font-weight:800;fill:#d5ff70}.flow{fill:none;stroke:#5b6c4c;stroke-width:2;marker-end:url(#arrow)}</style>
+<rect x="0" y="0" width="390" height="1790" rx="25" fill="#fdfff7" stroke="#fdfff7"/>
+<text x="22" y="42" class="title">Simple Reviewer</text>
+<text x="22" y="72" class="small">Vibe Coding / 1.2.0</text>
+<text x="22" y="120" class="hero">看懂 AI 写了什么，</text>
+<text x="22" y="157" class="hero">再决定下一步。</text>
+<rect x="18" y="188" width="354" height="112" rx="20" fill="#20241f" stroke="#20241f"/>
+<text x="36" y="224" class="white">代码 + 目标 + 问题</text>
+<text x="36" y="255" class="small" style="fill:#d6e2ca">用日常语言描述即可。</text>
+<text x="36" y="282" class="small" style="fill:#d6e2ca">不需要先学会编程术语。</text>
+<path d="M195 305V324" class="flow"/>
+<rect x="18" y="332" width="354" height="118" rx="20" fill="#fff" stroke="#dfe3d7"/>
+<rect x="34" y="347" width="38" height="31" rx="16" fill="#20241f" stroke="#20241f"/>
+<text x="42" y="369" class="num">01</text>
+<text x="83" y="370" class="title">把目标说清楚</text>
+<text x="34" y="407" class="small">把意图转成能观察的验收条件。</text>
+<text x="34" y="433" class="small">假设和待确认问题单独保留。</text>
+<path d="M195 450V469" class="flow"/>
+<rect x="18" y="477" width="354" height="118" rx="20" fill="#fff" stroke="#dfe3d7"/>
+<rect x="34" y="492" width="38" height="31" rx="16" fill="#20241f" stroke="#20241f"/>
+<text x="42" y="514" class="num">02</text>
+<text x="83" y="515" class="title">讲清 AI 的改动</text>
+<text x="34" y="552" class="small">改了哪里？用户会看到什么变化？</text>
+<text x="34" y="578" class="small">基于明确的基线比较文件。</text>
+<path d="M195 595V614" class="flow"/>
+<rect x="18" y="622" width="354" height="118" rx="20" fill="#fff" stroke="#dfe3d7"/>
+<rect x="34" y="637" width="38" height="31" rx="16" fill="#20241f" stroke="#20241f"/>
+<text x="42" y="659" class="num">03</text>
+<text x="83" y="660" class="title">拆解代码职责</text>
+<text x="34" y="697" class="small">解释输入、作用、输出与上下游。</text>
+<text x="34" y="723" class="small">标出文件、符号和真实行号。</text>
+<path d="M195 740V759" class="flow"/>
+<rect x="18" y="767" width="354" height="118" rx="20" fill="#fff" stroke="#dfe3d7"/>
+<rect x="34" y="782" width="38" height="31" rx="16" fill="#20241f" stroke="#20241f"/>
+<text x="42" y="804" class="num">04</text>
+<text x="83" y="805" class="title">核对实际行为</text>
+<text x="34" y="842" class="small">按独立预期执行适用检查。</text>
+<text x="34" y="868" class="small">记录真实结果、范围与限制。</text>
+<path d="M195 885V904" class="flow"/>
+<rect x="18" y="912" width="354" height="118" rx="20" fill="#fff" stroke="#dfe3d7"/>
+<rect x="34" y="927" width="38" height="31" rx="16" fill="#20241f" stroke="#20241f"/>
+<text x="42" y="949" class="num">05</text>
+<text x="83" y="950" class="title">突出影响与风险</text>
+<text x="34" y="987" class="small">数据、密钥、权限、费用等影响。</text>
+<text x="34" y="1013" class="small">说明是否执行，以及哪些仍未知。</text>
+<path d="M195 1030V1049" class="flow"/>
+<rect x="18" y="1057" width="354" height="118" rx="20" fill="#fff" stroke="#dfe3d7"/>
+<rect x="34" y="1072" width="38" height="31" rx="16" fill="#20241f" stroke="#20241f"/>
+<text x="42" y="1094" class="num">06</text>
+<text x="83" y="1095" class="title">给出下一步</text>
+<text x="34" y="1132" class="small">一次给出一个清楚的最小动作。</text>
+<text x="34" y="1158" class="small">修复后重新检查受影响路径。</text>
+<rect x="18" y="1216" width="354" height="106" rx="20" fill="#edf4e0" stroke="#dfe3d7"/>
+<text x="34" y="1248" class="title">先看审阅总览</text>
+<text x="34" y="1278" class="small">reviewer-overview.html / .md</text>
+<text x="34" y="1304" class="small">目标、变更、验证、风险和下一步</text>
+<rect x="18" y="1339" width="354" height="106" rx="20" fill="#fff" stroke="#dfe3d7"/>
+<text x="34" y="1371" class="title">再读代码图解</text>
+<text x="34" y="1401" class="small">code-breakdown.html / .md</text>
+<text x="34" y="1427" class="small">职责地图、源码位置和生效证据</text>
+<rect x="18" y="1462" width="354" height="106" rx="20" fill="#fff" stroke="#dfe3d7"/>
+<text x="34" y="1494" class="title">保留复核记录</text>
+<text x="34" y="1524" class="small">report.html / .md + effective JSON</text>
+<text x="34" y="1550" class="small">完整审查与文件快照，供后续复验</text>
+<circle cx="30" cy="1624" r="6" fill="#21804e"/>
+<text x="44" y="1630" class="small">范围内验证通过</text>
+<circle cx="210" cy="1624" r="6" fill="#bd3434"/>
+<text x="224" y="1630" class="small">已确认问题</text>
+<circle cx="30" cy="1666" r="6" fill="#b58019"/>
+<text x="44" y="1672" class="small">待核实</text>
+<circle cx="210" cy="1666" r="6" fill="#858b92"/>
+<text x="224" y="1672" class="small">未验证</text>
+<text x="22" y="1730" class="small">颜色表示验证状态，不是质量评分。</text>
+<text x="22" y="1758" class="small">流程图不代表实际验证已经完成。</text>
 </svg>

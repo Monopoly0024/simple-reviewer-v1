@@ -1,117 +1,83 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 1030" role="img" aria-labelledby="title desc">
-  <title id="title">简单的审阅者：从代码输入到图文拆解与验证结果</title>
-  <desc id="desc">输入代码和目标，依次拆解职责、解释输入输出和代码位置、检查实际行为、按证据标记状态，生成 HTML 与 Markdown 拆解文件，可选生成完整报告。</desc>
-  <defs>
-    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
-      <path d="M0 0L10 5L0 10Z" fill="#61776b"/>
-    </marker>
-    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
-      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#193b30" flood-opacity=".08"/>
-    </filter>
-    <style>
-      text{font-family:"Segoe UI","Microsoft YaHei",sans-serif;fill:#20382f}
-      .title{font-size:34px;font-weight:700}
-      .subtitle{font-size:18px;fill:#5c6e64}
-      .column{font-size:15px;font-weight:700;letter-spacing:1.5px;fill:#61776b}
-      .card-title{font-size:21px;font-weight:700}
-      .body{font-size:17px;fill:#52665c}
-      .small{font-size:14px;fill:#5c6e64}
-      .step{font-size:13px;font-weight:700;fill:#fff}
-      .output-title{font-size:19px;font-weight:700}
-      .output-body{font-size:15px;fill:#52665c}
-      .number{font-size:14px;font-weight:700;fill:#176549}
-      .card{fill:#fff;stroke:#d8e1d9;stroke-width:1.5}
-      .flow{fill:none;stroke:#789080;stroke-width:2.4;marker-end:url(#arrow)}
-    </style>
-  </defs>
-  <rect x="0" y="0" width="1440" height="1030" rx="24" fill="#f5f6f1"/>
-  <text x="54" y="66" class="title">从代码输入，到看得懂、能复核的结果</text>
-  <text x="56" y="102" class="subtitle">简单的审阅者 1.1.0 · 解释每块代码，也核实它是否真的完成目标</text>
-
-  <text x="58" y="169" class="column">输入</text>
-  <text x="430" y="169" class="column">SKILL 处理流程</text>
-  <text x="1086" y="169" class="column">产出</text>
-
-  <g filter="url(#shadow)">
-    <rect x="48" y="335" width="300" height="290" rx="18" fill="#e6f1f4" stroke="#96bdc8" stroke-width="1.8"/>
-    <circle cx="94" cy="385" r="23" fill="#28748a"/>
-    <path d="M83 386l8 8 16-18" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-    <text x="82" y="438" class="card-title">放入代码与目标</text>
-    <text x="82" y="480" class="body">代码文件或项目</text>
-    <text x="82" y="510" class="body">希望实现的需求</text>
-    <text x="82" y="540" class="body">可选：测试方式与范围</text>
-    <rect x="82" y="570" width="224" height="32" rx="16" fill="#d2e7ec"/>
-    <text x="98" y="592" class="small">只解释 / 拆解并验证</text>
-  </g>
-
-  <path d="M350 480H382V281H410" class="flow"/>
-
-  <g filter="url(#shadow)">
-    <rect x="420" y="210" width="600" height="142" rx="16" class="card"/>
-    <circle cx="464" cy="256" r="22" fill="#dcebdc"/>
-    <text x="457" y="262" class="number">01</text>
-    <text x="502" y="258" class="card-title">按职责拆成代码板块</text>
-    <text x="502" y="294" class="body">找到入口、关键逻辑、数据流与结果输出</text>
-    <text x="502" y="324" class="small">不机械逐行分段；结合真实调用关系</text>
-
-    <rect x="420" y="380" width="600" height="142" rx="16" class="card"/>
-    <circle cx="464" cy="426" r="22" fill="#e6e8f3"/>
-    <text x="457" y="432" class="number">02</text>
-    <text x="502" y="428" class="card-title">解释每块的作用和位置</text>
-    <text x="502" y="464" class="body">输入 → 处理 → 输出，以及上下游关系</text>
-    <text x="502" y="494" class="small">标出文件、函数/类、行号和相关源码</text>
-
-    <rect x="420" y="550" width="600" height="142" rx="16" class="card"/>
-    <circle cx="464" cy="596" r="22" fill="#faedcf"/>
-    <text x="457" y="602" class="number">03</text>
-    <text x="502" y="598" class="card-title">检查功能是否实际起效</text>
-    <text x="502" y="634" class="body">运行适用的测试或操作，对照独立预期</text>
-    <text x="502" y="664" class="small">记录证据、覆盖范围与未验证部分</text>
-
-    <rect x="420" y="720" width="600" height="142" rx="16" class="card"/>
-    <circle cx="464" cy="766" r="22" fill="#f2e2db"/>
-    <text x="457" y="772" class="number">04</text>
-    <text x="502" y="768" class="card-title">按证据标出状态与问题</text>
-    <text x="502" y="804" class="body">把目标、代码位置、观察结果关联起来</text>
-    <text x="502" y="834" class="small">局部通过不等于整体目标已完成</text>
-  </g>
-
-  <path d="M720 353V372" class="flow"/>
-  <path d="M720 523V542" class="flow"/>
-  <path d="M720 693V712" class="flow"/>
-  <path d="M1022 790H1052V379H1075" class="flow"/>
-  <path d="M1052 531H1075" class="flow"/>
-  <path d="M1052 766H1075" class="flow" stroke-dasharray="5 5"/>
-
-  <g filter="url(#shadow)">
-    <rect x="1090" y="254" width="302" height="214" rx="16" fill="#e5f1e8" stroke="#82ae8f" stroke-width="1.8"/>
-    <rect x="1110" y="276" width="52" height="27" rx="13" fill="#176549"/>
-    <text x="1122" y="295" class="step">默认</text>
-    <text x="1112" y="339" class="output-title">HTML 图文拆解</text>
-    <text x="1112" y="376" class="output-body">彩色板块图与导航</text>
-    <text x="1112" y="404" class="output-body">源码位置、作用与证据</text>
-    <text x="1112" y="432" class="output-body">code-breakdown.html</text>
-
-    <rect x="1090" y="495" width="302" height="166" rx="16" fill="#edf0f7" stroke="#9aa9c2" stroke-width="1.8"/>
-    <rect x="1110" y="517" width="52" height="27" rx="13" fill="#445a78"/>
-    <text x="1122" y="536" class="step">默认</text>
-    <text x="1112" y="580" class="output-title">Markdown 文字版</text>
-    <text x="1112" y="617" class="output-body">职责、位置与验证证据</text>
-    <text x="1112" y="643" class="output-body">code-breakdown.md</text>
-
-    <rect x="1090" y="688" width="302" height="166" rx="16" fill="#fff3dc" stroke="#d2ad64" stroke-width="1.8"/>
-    <rect x="1110" y="710" width="52" height="27" rx="13" fill="#895d12"/>
-    <text x="1122" y="729" class="step">可选</text>
-    <text x="1112" y="773" class="output-title">完整审查报告</text>
-    <text x="1112" y="810" class="output-body">总览 HTML / Markdown</text>
-    <text x="1112" y="838" class="output-body">有效 JSON 审查记录</text>
-  </g>
-
-  <rect x="50" y="908" width="1340" height="74" rx="14" fill="#fff" stroke="#d8e1d9"/>
-  <text x="74" y="941" class="small" style="font-weight:700">状态颜色</text>
-  <circle cx="194" cy="937" r="8" fill="#21804e"/><text x="210" y="943" class="small">实际验证通过</text>
-  <circle cx="397" cy="937" r="8" fill="#bd3434"/><text x="413" y="943" class="small">确认的问题</text>
-  <circle cx="577" cy="937" r="8" fill="#c18a1a"/><text x="593" y="943" class="small">待核实</text>
-  <circle cx="716" cy="937" r="8" fill="#858b92"/><text x="732" y="943" class="small">尚未验证</text>
-  <text x="74" y="967" class="small">无运行条件时保留未验证；流程图说明处理步骤，不替代真实验证证据。</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1060" viewBox="0 0 1440 1060" role="img" aria-labelledby="title desc">
+<title id="title">Simple Reviewer: 看懂 AI 写了什么，再决定下一步。</title>
+<desc id="desc">Goals, changes, code map, verification, risks and next actions. HTML, Markdown and effective review record.</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#5b6c4c"/></marker></defs>
+<style>text{font-family:"Segoe UI","Microsoft YaHei",sans-serif;fill:#262626}.hero{font-size:45px;font-weight:800;letter-spacing:-1px}.title{font-size:23px;font-weight:750}.body{font-size:18px;fill:#56614e}.small{font-size:16px;fill:#60685d}.white{font-size:26px;font-weight:750;fill:#fff}.num{font-size:18px;font-weight:800;fill:#d5ff70}.flow{fill:none;stroke:#5b6c4c;stroke-width:2;marker-end:url(#arrow)}</style>
+<rect x="0" y="0" width="1440" height="1060" rx="25" fill="#fdfff7" stroke="#fdfff7"/>
+<text x="48" y="57" class="title">Simple Reviewer</text>
+<rect x="1202" y="25" width="186" height="44" rx="22" fill="#20241f" stroke="#20241f"/>
+<text x="1225" y="54" class="num">Vibe Coding / 1.2</text>
+<text x="48" y="137" class="hero">看懂 AI 写了什么，再决定下一步。</text>
+<text x="48" y="181" class="body">Simple Reviewer 1.2 / 为 Vibe Coding 提供可读、可核对的审阅</text>
+<rect x="48" y="226" width="264" height="410" rx="26" fill="#20241f" stroke="#20241f"/>
+<text x="74" y="292" class="white">你的代码</text>
+<text x="74" y="339" class="white">你的目标</text>
+<text x="74" y="386" class="white">你的问题</text>
+<text x="74" y="525" class="small" style="fill:#d6e2ca">用日常语言描述就可以。</text>
+<text x="74" y="555" class="small" style="fill:#d6e2ca">不需要先学会编程术语。</text>
+<rect x="355" y="226" width="326" height="174" rx="20" fill="#fff" stroke="#dfe3d7"/>
+<rect x="375" y="244" width="45" height="34" rx="17" fill="#20241f" stroke="#20241f"/>
+<text x="385" y="268" class="num">01</text>
+<text x="375" y="313" class="title">把目标说清楚</text>
+<text x="375" y="349" class="small">把意图转成能观察的验收条件。</text>
+<text x="375" y="376" class="small">假设和待确认问题单独保留。</text>
+<rect x="709" y="226" width="326" height="174" rx="20" fill="#fff" stroke="#dfe3d7"/>
+<rect x="729" y="244" width="45" height="34" rx="17" fill="#20241f" stroke="#20241f"/>
+<text x="739" y="268" class="num">02</text>
+<text x="729" y="313" class="title">讲清 AI 的改动</text>
+<text x="729" y="349" class="small">改了哪里？用户会看到什么变化？</text>
+<text x="729" y="376" class="small">基于明确的基线比较文件。</text>
+<rect x="1063" y="226" width="326" height="174" rx="20" fill="#fff" stroke="#dfe3d7"/>
+<rect x="1083" y="244" width="45" height="34" rx="17" fill="#20241f" stroke="#20241f"/>
+<text x="1093" y="268" class="num">03</text>
+<text x="1083" y="313" class="title">拆解代码职责</text>
+<text x="1083" y="349" class="small">解释输入、作用、输出与上下游。</text>
+<text x="1083" y="376" class="small">标出文件、符号和真实行号。</text>
+<rect x="1063" y="462" width="326" height="174" rx="20" fill="#fff" stroke="#dfe3d7"/>
+<rect x="1083" y="480" width="45" height="34" rx="17" fill="#20241f" stroke="#20241f"/>
+<text x="1093" y="504" class="num">04</text>
+<text x="1083" y="549" class="title">核对实际行为</text>
+<text x="1083" y="585" class="small">按独立预期执行适用检查。</text>
+<text x="1083" y="612" class="small">记录真实结果、范围与限制。</text>
+<rect x="709" y="462" width="326" height="174" rx="20" fill="#fff" stroke="#dfe3d7"/>
+<rect x="729" y="480" width="45" height="34" rx="17" fill="#20241f" stroke="#20241f"/>
+<text x="739" y="504" class="num">05</text>
+<text x="729" y="549" class="title">突出影响与风险</text>
+<text x="729" y="585" class="small">数据、密钥、权限、费用等影响。</text>
+<text x="729" y="612" class="small">说明是否执行，以及哪些仍未知。</text>
+<rect x="355" y="462" width="326" height="174" rx="20" fill="#fff" stroke="#dfe3d7"/>
+<rect x="375" y="480" width="45" height="34" rx="17" fill="#20241f" stroke="#20241f"/>
+<text x="385" y="504" class="num">06</text>
+<text x="375" y="549" class="title">给出下一步</text>
+<text x="375" y="585" class="small">一次给出一个清楚的最小动作。</text>
+<text x="375" y="612" class="small">修复后重新检查受影响路径。</text>
+<path d="M315 310H345" class="flow"/>
+<path d="M683 310H699" class="flow"/>
+<path d="M1037 310H1053" class="flow"/>
+<path d="M1226 403V451" class="flow"/>
+<path d="M1060 550H1045" class="flow"/>
+<path d="M706 550H691" class="flow"/>
+<path d="M518 639V688" class="flow"/>
+<rect x="48" y="708" width="434" height="155" rx="20" fill="#edf4e0" stroke="#dfe3d7"/>
+<text x="72" y="751" class="title">先看审阅总览</text>
+<text x="72" y="790" class="body">reviewer-overview.html / .md</text>
+<text x="72" y="831" class="small">目标、变更、验证、风险和下一步</text>
+<rect x="502" y="708" width="434" height="155" rx="20" fill="#fff" stroke="#dfe3d7"/>
+<text x="526" y="751" class="title">再读代码图解</text>
+<text x="526" y="790" class="body">code-breakdown.html / .md</text>
+<text x="526" y="831" class="small">职责地图、源码位置和生效证据</text>
+<rect x="956" y="708" width="434" height="155" rx="20" fill="#fff" stroke="#dfe3d7"/>
+<text x="980" y="751" class="title">保留复核记录</text>
+<text x="980" y="790" class="body">report.html / .md + effective JSON</text>
+<text x="980" y="831" class="small">完整审查与文件快照，供后续复验</text>
+<text x="48" y="904" class="body">render 生成总览和完整记录；breakdown 只生成代码拆解两文件。</text>
+<circle cx="58" cy="957" r="8" fill="#21804e"/>
+<text x="78" y="964" class="body">范围内验证通过</text>
+<circle cx="340" cy="957" r="8" fill="#bd3434"/>
+<text x="360" y="964" class="body">已确认问题</text>
+<circle cx="622" cy="957" r="8" fill="#b58019"/>
+<text x="642" y="964" class="body">待核实</text>
+<circle cx="904" cy="957" r="8" fill="#858b92"/>
+<text x="924" y="964" class="body">未验证</text>
+<text x="48" y="1018" class="small">颜色表示证据状态，不是质量分数。这是使用流程图，不是实际检查结果。</text>
 </svg>

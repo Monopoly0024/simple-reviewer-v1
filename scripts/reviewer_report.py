@@ -21,6 +21,62 @@ COLORS = {'passed': ('#dcfce7', '#15803d', '#14532d'),
           'unchecked': ('#f3f4f6', '#6b7280', '#374151')}
 
 
+def optional_context(data):
+    """Validate beginner-facing context without allowing it to alter evidence status."""
+    context = {}
+    goal = data.get('user_goal')
+    if 'user_goal' in data:
+        need(isinstance(goal, dict), 'user_goal must be an object')
+        for key in ('original_request', 'plain_language'):
+            if key in goal:
+                need(isinstance(goal[key], str), f'user_goal.{key} must be text')
+        for key in ('acceptance_criteria', 'assumptions', 'open_questions'):
+            if key in goal:
+                need(isinstance(goal[key], list) and all(isinstance(item, str) for item in goal[key]),
+                     f'user_goal.{key} must be a text array')
+        context['user_goal'] = goal
+    changes = data.get('change_summary')
+    if 'change_summary' in data:
+        need(isinstance(changes, dict), 'change_summary must be an object')
+        if 'baseline' in changes:
+            need(isinstance(changes['baseline'], str), 'change_summary.baseline must be text')
+        for key in ('files_added', 'files_modified', 'files_deleted', 'user_visible_changes', 'possible_impacts'):
+            if key in changes:
+                need(isinstance(changes[key], list) and all(isinstance(item, str) for item in changes[key]),
+                     f'change_summary.{key} must be a text array')
+        for key in ('files_added', 'files_modified', 'files_deleted'):
+            for path in changes.get(key, []):
+                project_path(Path(data['project_root']), path)
+        context['change_summary'] = changes
+    risks = data.get('risks')
+    if 'risks' in data:
+        need(isinstance(risks, list), 'risks must be an array')
+        for index, risk in enumerate(risks, 1):
+            need(isinstance(risk, dict), f'risks[{index}] must be an object')
+            text_fields(risk, ('title', 'action', 'status', 'impact', 'next_step'), f'risks[{index}]')
+            need(risk.get('status') in ('observed', 'not-run', 'mitigated', 'unknown'),
+                 f'risks[{index}].status is invalid')
+        context['risks'] = risks
+    actions = data.get('next_actions')
+    if 'next_actions' in data:
+        need(isinstance(actions, list), 'next_actions must be an array')
+        for index, action in enumerate(actions, 1):
+            need(isinstance(action, dict), f'next_actions[{index}] must be an object')
+            text_fields(action, ('action', 'reason'), f'next_actions[{index}]')
+        context['next_actions'] = actions
+    comprehension = data.get('comprehension')
+    if 'comprehension' in data:
+        need(isinstance(comprehension, dict), 'comprehension must be an object')
+        glossary = comprehension.get('glossary', [])
+        need(isinstance(glossary, list), 'comprehension.glossary must be an array')
+        for index, item in enumerate(glossary, 1):
+            need(isinstance(item, dict), f'comprehension.glossary[{index}] must be an object')
+            text_fields(item, ('term', 'meaning'), f'comprehension.glossary[{index}]')
+        context['comprehension'] = comprehension
+    data['context'] = context
+    return context
+
+
 def need(condition, message):
     if not condition:
         raise ValueError(message)
@@ -79,6 +135,7 @@ def assess(record, record_dir):
     root = (root_value if root_value.is_absolute() else Path(record_dir) / root_value).resolve()
     need(root.is_dir(), f'Project root not found: {root}')
     data['project_root'] = str(root)
+    optional_context(data)
     snapshot = data.get('snapshot', {})
     text_fields(snapshot, ['base_revision', 'notes'], 'snapshot')
     need(isinstance(snapshot.get('files'), list), 'snapshot.files must be an array')
@@ -233,12 +290,103 @@ def assess(record, record_dir):
     required = [r for r in requirements.values() if r['required']]
     if active_blocking or any(r['status'] == 'failed' for r in required):
         overall = 'failed'
-    elif required and all(r['status'] == 'passed' for r in required):
+    elif (required and all(r['status'] == 'passed' for r in required)
+          and not any(q.strip() for q in data.get('user_goal', {}).get('open_questions', []))):
         overall = 'passed'
     else:
         overall = 'unchecked'
     data.update(overall=overall, stale_files=sorted(stale_files), stale_evidence=sorted(stale_evidence))
     return data
+
+
+def context_sections(data):
+    """Return shared, escaped HTML and readable Markdown from effective review data."""
+    esc = lambda value: html.escape(str(value), quote=True)
+    sections, lines = [], []
+
+    def section(key, title, body, text):
+        sections.append(f'<section class="context-section" id="{key}"><h2>{title}</h2>{body}</section>')
+        lines.extend([f'## {title}', '', *text, ''])
+
+    def listing(values, empty):
+        return ('<ul>' + ''.join(f'<li>{esc(value)}</li>' for value in values) + '</ul>'
+                if values else f'<p class="muted">{empty}</p>')
+
+    goal = data.get('user_goal', {})
+    goal_body = '<p class="original-request">' + esc(goal.get('original_request') or '未提供原始需求原文；以下验收项来自审查记录。') + '</p>'
+    goal_text = [goal.get('original_request') or '未提供原始需求原文；以下验收项来自审查记录。']
+    if goal.get('plain_language'):
+        goal_body += '<p>' + esc(goal['plain_language']) + '</p>'
+        goal_text += ['', goal['plain_language']]
+    for key, label in [('acceptance_criteria', '补充验收描述（有效状态以下方验收项为准）'),
+                       ('assumptions', '仍属假设'), ('open_questions', '需要明确的问题')]:
+        if goal.get(key):
+            goal_body += f'<h3>{label}</h3>' + listing(goal[key], '')
+            goal_text += ['', label + '：', *['- ' + item for item in goal[key]]]
+    section('goal', '我想要什么', goal_body, goal_text)
+
+    changes = data.get('change_summary')
+    change_body, change_text = '', []
+    if not changes:
+        change_body = '<p class="muted">未登记变更说明；不能仅凭当前源码判断 AI 刚刚改了哪些内容。</p>'
+        change_text = ['未登记变更说明；不能仅凭当前源码判断 AI 刚刚改了哪些内容。']
+    else:
+        baseline = changes.get('baseline') or '未提供可比较基线；以下为审查者登记的变更说明。'
+        change_body = '<p class="muted">比较基线：' + esc(baseline) + '</p>'
+        change_text = ['比较基线：' + baseline]
+        for key, label in [('user_visible_changes', '你会看到的变化'), ('files_added', '新增文件'),
+                           ('files_modified', '修改文件'), ('files_deleted', '删除文件'), ('possible_impacts', '可能影响')]:
+            if changes.get(key):
+                change_body += f'<h3>{label}</h3>' + listing(changes[key], '')
+                change_text += ['', label + '：', *['- ' + item for item in changes[key]]]
+    section('changes', 'AI 改了什么', change_body, change_text)
+
+    checks = {e['id']: e for e in data['evidence']}
+    matrix = ['<div class="acceptance-list">']
+    matrix_text = ['| 目标 | 验收条件 | 实际观察及范围 | 有效状态 |', '| --- | --- | --- | --- |']
+    for req in data['requirements']:
+        observations = []
+        for key in req['evidence_ids']:
+            e = checks[key]
+            stale = '证据已过期，待复验；' if key in data['stale_evidence'] else ''
+            kind = '实际执行记录' if e['kind'] == 'runtime' else '静态核对'
+            observations.append(f'{key} · {kind} · {stale}{e["observed"]}；范围：{e["scope"]}')
+        observed = '；'.join(observations) or '没有登记实际验证证据。'
+        matrix.append(f'<article class="acceptance {req["status"]}"><div class="acceptance-heading"><h3>{esc(req["id"])} · {esc(req["text"])}</h3><span class="badge {req["status"]}">{LABELS[req["status"]]}</span></div>'
+                      f'<p><b>怎样才算完成：</b>{esc(req["acceptance"])}</p><p><b>实际观察：</b>{esc(observed)}</p>'
+                      f'<details><summary>查看需求来源与检查步骤</summary><p>{esc(req["source"])}</p>'
+                      + ''.join(f'<p>{esc(checks[key]["command"])}<br>独立预期：{esc(checks[key]["expected"])}</p>' for key in req['evidence_ids'])
+                      + '</details></article>')
+        matrix_text.append('| ' + ' | '.join(md_cell(value) for value in [req['text'], req['acceptance'], observed, LABELS[req['status']]]) + ' |')
+    matrix.append('</div>')
+    if not data['requirements']:
+        matrix.append('<p class="muted">未登记验收目标，无法给出目标完成结论。</p>')
+    section('acceptance', '实际检查了什么', ''.join(matrix), matrix_text)
+
+    risk_labels = {'observed': '动作已发生', 'not-run': '尚未执行', 'mitigated': '已登记缓解措施', 'unknown': '执行状态待确认'}
+    risks = data.get('risks', [])
+    risk_body, risk_text = [], []
+    for risk in risks:
+        risk_body.append('<article class="risk-card"><h3>' + esc(risk['title']) + '</h3><span class="risk-state">'
+                         + risk_labels[risk['status']] + '</span><p><b>涉及动作：</b>' + esc(risk['action'])
+                         + '</p><p><b>影响：</b>' + esc(risk['impact']) + '</p><p><b>处理建议：</b>' + esc(risk['next_step']) + '</p></article>')
+        risk_text += [f'### {risk["title"]} · {risk_labels[risk["status"]]}', '',
+                      '涉及动作：' + risk['action'], '', '影响：' + risk['impact'], '', '处理建议：' + risk['next_step'], '']
+    if not risks:
+        risk_body = ['<p class="muted">未登记风险检查；这不表示没有风险。</p>']
+        risk_text = ['未登记风险检查；这不表示没有风险。']
+    section('risks', '需要留意的影响', ''.join(risk_body), risk_text)
+
+    actions = data.get('next_actions', [])
+    action_body = ''.join('<li><strong>' + esc(a['action']) + '</strong><p>' + esc(a['reason']) + '</p></li>' for a in actions)
+    section('next-actions', '下一步怎么做', '<ol class="action-list">' + action_body + '</ol>' if actions else
+            '<p class="muted">未登记下一步。可从未验证目标或已确认问题继续询问，先补证据再作结论。</p>',
+            [f'{i}. {a["action"]} — {a["reason"]}' for i, a in enumerate(actions, 1)] or ['未登记下一步；先明确未验证目标和证据缺口。'])
+    glossary = data.get('comprehension', {}).get('glossary', [])
+    if glossary:
+        section('glossary', '读不懂的词，点开看', ''.join('<details><summary>' + esc(item['term']) + '</summary><p>'
+                + esc(item['meaning']) + '</p></details>' for item in glossary), ['- ' + item['term'] + '：' + item['meaning'] for item in glossary])
+    return ''.join(sections), '\n'.join(lines)
 
 
 def mermaid(data):
@@ -317,6 +465,7 @@ def code_breakdown(data):
              data.get('journey_note', '整体运行路径的覆盖范围，以各节点的验证证据为准。'), '',
              '本文件逐块解释职责、实际行为、代码位置与生效证据。它是独立交付文件，无需打开总审查报告。', '',
              '颜色：绿色=已验证通过，红色=已确认问题，黄色=待核实，灰色=未验证。板块颜色按包含节点汇总，正常子节点仍保留自身状态；局部通过不表示整体流程已完成。', '',
+             context_sections(data)[1], '',
              '```mermaid', block_graph(data), '```', '',
              '| 板块 | 作用 | 作用验证 | 代码位置 |', '| --- | --- | --- | --- |']
     for block in data['blocks']:
@@ -386,7 +535,7 @@ def code_breakdown(data):
 
 
 def markdown(data):
-    lines = [f'# {data["title"]}', '', f'总体结论：**{LABELS[data["overall"]]}**。', '',
+    lines = [f'# {data["title"]}', '', f'总体结论：**{LABELS[data["overall"]]}**。', '', context_sections(data)[1], '',
              f'审查时间：{data["reviewed_at"]}；模式：{data["mode"]}。', '',
              f'项目：`{data["project_root"]}`', '', f'基线：{data["snapshot"]["base_revision"]}。{data["snapshot"]["notes"]}', '',
              data.get('journey_note', '完整路径范围：以各项证据的 scope 为准，未声明的路径不视为通过。'), '',
@@ -503,7 +652,9 @@ HTML_TEMPLATE = r'''<!doctype html>
 <title>@@TITLE@@</title><style>
 :root{font-family:system-ui,"Microsoft YaHei",sans-serif;color:#17212b;background:#f7f9fb;line-height:1.65}*{box-sizing:border-box}body{margin:0}main{max-width:1240px;margin:auto;padding:28px}h1{font-size:26px;line-height:1.35;margin:0 0 12px}h2{font-size:19px;margin:0 0 16px}h3{font-size:16px;margin:18px 0 8px}p{margin:8px 0}small,.muted{color:#52616f}button{font:inherit;padding:7px 13px;border:1px solid #b4c0cb;border-radius:6px;background:white;color:inherit;cursor:pointer}button:focus-visible,.node:focus-visible{outline:3px solid #2563eb;outline-offset:3px}button[aria-pressed=true]{background:#e7edf5;border-color:#60758d}.badge{display:inline-block;padding:2px 9px;border-radius:5px;font-size:13px}.passed{background:#dcfce7;color:#14532d}.failed{background:#fee2e2;color:#7f1d1d}.pending{background:#fef3c7;color:#713f12}.unchecked{background:#e5e7eb;color:#374151}.legend{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}.columns{display:grid;grid-template-columns:minmax(320px,.95fr) minmax(0,1.2fr);gap:20px;align-items:start}.panel{background:white;border:1px solid #dce3e9;border-radius:10px;padding:20px;min-width:0}.graph{overflow:auto}.graph svg{width:100%;display:block;margin:auto}.node{cursor:pointer}.node text{font-size:13px;pointer-events:none}.node .node-title{font-size:14px;font-weight:600}.node[aria-pressed=true] rect{filter:drop-shadow(0 0 3px #2563eb);stroke-width:3}.edge-label{font-size:11px;paint-order:stroke;stroke:white;stroke-width:4px;stroke-linejoin:round}.toolbar{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 16px}dl{display:grid;grid-template-columns:84px minmax(0,1fr);gap:9px 12px;margin:12px 0}dt{font-weight:600;color:#52616f}dd{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f4f6f8;padding:10px;border-radius:5px;font-size:12px}section{margin-top:20px}.table-wrap{overflow:auto}table{border-collapse:collapse;width:100%;font-size:14px}th,td{text-align:left;padding:11px;border-bottom:1px solid #e1e6eb;vertical-align:top;overflow-wrap:anywhere}summary{cursor:pointer;font-weight:600}details{margin-top:14px;border-top:1px solid #e1e6eb;padding-top:12px}#node-buttons{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0}.note{border-left:3px solid #64748b;padding-left:12px}footer{font-size:12px;color:#52616f;margin-top:24px}@media(max-width:760px){main{padding:16px}.columns{grid-template-columns:1fr}.panel{padding:15px}h1{font-size:22px}dl{grid-template-columns:72px minmax(0,1fr)}}@media print{body{background:white}.toolbar{display:none}.columns{display:block}.panel{border:0;padding:0}.graph svg{max-height:650px}details{break-inside:avoid}}
 header p{overflow-wrap:anywhere}.badge{white-space:nowrap}.table-wrap table{min-width:640px}.graph{border-bottom:1px solid #e1e6eb}.graph svg{width:auto}
+body{background:#fdfff7;color:#262626;font-family:"Segoe UI","Microsoft YaHei",sans-serif}header{padding:24px 0}h1{font-size:clamp(28px,4vw,48px);letter-spacing:-.03em}.panel{border-color:#dfe3d7;border-radius:22px}button{border-radius:999px;background:#20241f;color:#fff;border-color:#20241f;padding:9px 15px}button[aria-pressed=true]{background:#d5ff70;color:#262626;border-color:#798b58}.muted,dt,footer{color:#626b60}a{color:inherit;text-underline-offset:4px}.entry-link{display:inline-block;background:#20241f;color:white;padding:9px 18px;border-radius:999px;text-decoration:none}.graph{background:#f1f4e9;border-radius:14px}.graph svg{max-width:none}pre{background:#f1f4e9}
 </style></head><body><main><header><h1 id="title"></h1><p id="summary"></p><p id="meta" class="muted"></p><p id="journey" class="note"></p>
+<p><a class="entry-link" href="reviewer-overview.html">返回审阅总览</a> <a href="code-breakdown.html">查看代码图解</a></p>
 <div class="legend" aria-label="状态图例"><span class="badge passed">绿色 · 已验证通过</span><span class="badge failed">红色 · 已确认问题</span><span class="badge pending">黄色 · 待核实</span><span class="badge unchecked">灰色 · 未验证</span></div>
 <p class="muted">点击节点查看职责、位置与证据。绿色只覆盖声明的验证范围。</p></header>
 <p><a href="code-breakdown.html">打开 HTML 图文拆解</a> · <a href="code-breakdown.md">打开文字版</a></p>
@@ -539,7 +690,7 @@ drawButtons();selectNode((data.nodes.find(n=>n.status==='failed')||data.nodes.fi
 </script></body></html>'''
 
 
-def illustrated_breakdown(data):
+def illustrated_breakdown(data, include_overview=False):
     """Render escaped explanations and current source excerpts; execute nothing."""
     esc = lambda value: html.escape(str(value), quote=True)
     badge = lambda state: f'<span class="badge {state}">{LABELS[state]}</span>'
@@ -658,7 +809,10 @@ def illustrated_breakdown(data):
               'JOURNEY': esc(data.get('journey_note', data['block_grouping'])),
               'STATUS': badge(data['overall']),
               'SNAPSHOT': esc(json.dumps(data['snapshot'], ensure_ascii=False, indent=2)),
-              'ROOT': esc(data['project_root'])}
+              'ROOT': esc(data['project_root']),
+              'STYLES': (Path(__file__).resolve().parent.parent / 'assets' / 'reviewer-breakdown.css').read_text(encoding='utf-8'),
+              'CONTEXT': context_sections(data)[0],
+              'OVERVIEWLINK': '<p><a class="overview-link" href="reviewer-overview.html">打开审阅总览：先看懂，再决定</a></p>' if include_overview else ''}
     return re.sub(r'@@([A-Z]+)@@', lambda match: values[match.group(1)], template)
 
 
@@ -669,14 +823,15 @@ def render(record, record_dir, out_dir, breakdown_only=False):
              'breakdown_html': out / 'code-breakdown.html'}
     if not breakdown_only:
         paths.update(markdown=out / 'report.md', html=out / 'report.html',
-                     record=out / 'review.effective.json')
+                     record=out / 'review.effective.json', overview=out / 'reviewer-overview.md',
+                     overview_html=out / 'reviewer-overview.html')
     root = Path(data['project_root'])
     protected = {project_path(root, f['path']) for f in data['snapshot']['files']}
     protected.update(project_path(root, e['log_path']) for e in data['evidence'] if e['kind'] == 'runtime')
     need(not any(p.resolve() in protected for p in paths.values()), 'Output would overwrite reviewed source or evidence')
     payload = json.dumps(data, ensure_ascii=False).replace('<', '\\u003c').replace('>', '\\u003e').replace('&', '\\u0026')
     document = HTML_TEMPLATE.replace('@@TITLE@@', html.escape(data['title'])).replace('@@SVG@@', graph_svg(data)).replace('@@DATA@@', payload)
-    breakdown_document = illustrated_breakdown(data)
+    breakdown_document = illustrated_breakdown(data, include_overview=not breakdown_only)
     out.mkdir(parents=True, exist_ok=True)
     paths['breakdown'].write_text(code_breakdown(data), encoding='utf-8')
     paths['breakdown_html'].write_text(breakdown_document, encoding='utf-8')
@@ -684,6 +839,17 @@ def render(record, record_dir, out_dir, breakdown_only=False):
         paths['markdown'].write_text(markdown(data), encoding='utf-8')
         paths['html'].write_text(document, encoding='utf-8')
         paths['record'].write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+        context_html, context_md = context_sections(data)
+        template = (Path(__file__).resolve().parent.parent / 'assets' / 'reviewer-overview.html').read_text(encoding='utf-8')
+        values = {'TITLE': html.escape(data['title']), 'DATE': html.escape(data['reviewed_at']),
+                  'ROOT': html.escape(data['project_root']), 'STATUS': LABELS[data['overall']],
+                  'STATUSCLASS': data['overall'],
+                  'BLOCKS': str(len(data['blocks'])), 'CONTEXT': context_html,
+                  'BASELINE': html.escape(data['snapshot']['base_revision'])}
+        overview_html = re.sub(r'@@([A-Z]+)@@', lambda match: values[match.group(1)], template)
+        paths['overview_html'].write_text(overview_html, encoding='utf-8')
+        paths['overview'].write_text(f'# {data["title"]} · 审阅总览\n\n目标状态：{LABELS[data["overall"]]}\n\n'
+                                    + context_md + '\n[查看代码拆解](code-breakdown.md)\n', encoding='utf-8')
     return paths
 
 

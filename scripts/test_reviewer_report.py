@@ -50,6 +50,76 @@ class ReportTests(unittest.TestCase):
     def test_valid_runtime_evidence_passes(self):
         self.assertEqual(self.assess()['overall'], 'passed')
 
+    def test_context_overview_has_effective_acceptance_and_escaped_text(self):
+        self.record['user_goal'] = {'original_request': 'Show <script>alert(1)</script>',
+                                    'plain_language': 'Return a value', 'open_questions': []}
+        self.record['change_summary'] = {'baseline': 'working tree', 'files_modified': ['app.py'],
+                                        'user_visible_changes': ['A visible <change>']}
+        self.record['risks'] = [{'title': 'Example risk', 'action': 'Write a file',
+            'status': 'not-run', 'impact': 'No file changed', 'next_step': 'Use an isolated fixture'}]
+        self.record['next_actions'] = [{'action': 'Try empty input', 'reason': 'Boundary is unchecked'}]
+        self.record['comprehension'] = {'glossary': [{'term': 'Unit test', 'meaning': 'Check one small part'}]}
+        paths = reviewer.render(self.record, self.root, self.root / 'report')
+        page = paths['overview_html'].read_text(encoding='utf-8')
+        self.assertIn('&lt;script&gt;alert(1)&lt;/script&gt;', page)
+        self.assertNotIn('<script>alert(1)</script>', page)
+        self.assertIn('Try empty input', page)
+        self.assertIn('Example risk', page)
+        self.assertIn('Observed return value equals 1', page)
+        self.assertIn('已验证通过', page)
+        self.assertIn('class="verdict passed"', page)
+        self.assertIn('Check one small part', page)
+        self.assertIn('Try empty input', paths['overview'].read_text(encoding='utf-8'))
+
+    def test_open_goal_questions_prevent_overall_pass(self):
+        self.record['user_goal'] = {'original_request': 'Return a value',
+                                   'open_questions': ['Which value is actually required?']}
+        self.assertEqual(self.assess()['overall'], 'unchecked')
+
+    def test_context_invalid_action_state_is_rejected(self):
+        self.record['risks'] = [{'title': 'Risk', 'action': 'Delete data', 'status': 'safe',
+                                'impact': 'Unknown', 'next_step': 'Inspect first'}]
+        with self.assertRaisesRegex(ValueError, 'status'):
+            self.assess()
+
+    def test_context_invalid_change_path_is_rejected(self):
+        self.record['change_summary'] = {'files_modified': ['../outside.py']}
+        with self.assertRaisesRegex(ValueError, 'outside|Outside'):
+            self.assess()
+
+    def test_null_context_is_rejected_with_validation_error(self):
+        for key in ('user_goal', 'change_summary', 'risks', 'next_actions', 'comprehension'):
+            with self.subTest(key=key):
+                record = copy.deepcopy(self.record)
+                record[key] = None
+                with self.assertRaisesRegex(ValueError, key):
+                    reviewer.assess(record, self.root)
+
+    def test_old_record_overview_does_not_invent_context(self):
+        page = reviewer.render(self.record, self.root, self.root / 'report')[
+            'overview_html'].read_text(encoding='utf-8')
+        self.assertIn('未提供原始需求原文', page)
+        self.assertIn('未登记变更说明', page)
+        self.assertIn('未登记风险检查', page)
+        self.assertNotIn('>没有风险<', page)
+
+    def test_overview_uses_downgraded_evidence(self):
+        (self.root / 'app.py').write_text('def run(): return 2\n', encoding='utf-8')
+        page = reviewer.render(self.record, self.root, self.root / 'report')[
+            'overview_html'].read_text(encoding='utf-8')
+        self.assertIn('未验证', page)
+        self.assertIn('证据已过期，待复验', page)
+        self.assertNotIn('class="acceptance passed"', page)
+
+    def test_overview_cannot_overwrite_source(self):
+        source = self.root / 'reviewer-overview.html'
+        source.write_text('original', encoding='utf-8')
+        self.record['snapshot']['files'].append({'path': source.name,
+            'sha256': hashlib.sha256(source.read_bytes()).hexdigest()})
+        with self.assertRaisesRegex(ValueError, 'overwrite'):
+            reviewer.render(self.record, self.root, self.root)
+        self.assertEqual(source.read_text(encoding='utf-8'), 'original')
+
     def test_bundled_example_evidence_survives_lf_checkout(self):
         assets = SCRIPT.parent.parent / 'assets'
         fixture = self.root / 'example'
@@ -163,6 +233,7 @@ class ReportTests(unittest.TestCase):
 
     def test_render_always_produces_standalone_breakdown(self):
         paths = reviewer.render(self.record, self.root, self.root / 'report')
+        self.assertEqual(len(paths), 7)
         self.assertIn('breakdown', paths)
         self.assertIn('breakdown_html', paths)
         doc = paths['breakdown'].read_text(encoding='utf-8')

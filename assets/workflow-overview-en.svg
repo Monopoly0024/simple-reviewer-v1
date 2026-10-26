@@ -1,110 +1,83 @@
-<?xml version="1.0" encoding="utf-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 1030" role="img" aria-labelledby="title desc">
-  <title id="title">Simple Reviewer: from AI-written code to evidence-based explanations</title>
-  <desc id="desc">Provide code and goals, map responsibilities, explain source locations, check actual behavior, and record evidence. Generate HTML and Markdown breakdowns, with optional full reports.</desc>
-  <defs>
-    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
-      <path d="M0 0L10 5L0 10Z" fill="#61776b" />
-    </marker>
-    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
-      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#193b30" flood-opacity=".08" />
-    </filter>
-    <style>
-      text{font-family:"Segoe UI","Microsoft YaHei",sans-serif;fill:#20382f}
-      .title{font-size:34px;font-weight:700}
-      .subtitle{font-size:18px;fill:#5c6e64}
-      .column{font-size:15px;font-weight:700;letter-spacing:1.5px;fill:#61776b}
-      .card-title{font-size:21px;font-weight:700}
-      .body{font-size:17px;fill:#52665c}
-      .small{font-size:14px;fill:#5c6e64}
-      .step{font-size:13px;font-weight:700;fill:#fff}
-      .output-title{font-size:19px;font-weight:700}
-      .output-body{font-size:15px;fill:#52665c}
-      .number{font-size:14px;font-weight:700;fill:#176549}
-      .card{fill:#fff;stroke:#d8e1d9;stroke-width:1.5}
-      .flow{fill:none;stroke:#789080;stroke-width:2.4;marker-end:url(#arrow)}
-    </style>
-  </defs>
-  <rect x="0" y="0" width="1440" height="1030" rx="24" fill="#f5f6f1" />
-  <text x="54" y="66" class="title">Understand the code behind your Vibe Coding workflow</text>
-  <text x="56" y="102" class="subtitle">Simple Reviewer 1.1.0 / Explain AI-written code. Verify what it actually does.</text>
-  <text x="58" y="169" class="column">INPUT</text>
-  <text x="430" y="169" class="column">SKILL WORKFLOW</text>
-  <text x="1086" y="169" class="column">OUTPUTS</text>
-  <g filter="url(#shadow)">
-    <rect x="48" y="335" width="300" height="290" rx="18" fill="#e6f1f4" stroke="#96bdc8" stroke-width="1.8" />
-    <circle cx="94" cy="385" r="23" fill="#28748a" />
-    <path d="M83 386l8 8 16-18" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
-    <text x="82" y="438" class="card-title">Code + goals</text>
-    <text x="82" y="480" class="body">Source files or a project</text>
-    <text x="82" y="510" class="body">Your intended outcome</text>
-    <text x="82" y="540" class="body">Optional: scope and tests</text>
-    <rect x="82" y="570" width="224" height="32" rx="16" fill="#d2e7ec" />
-    <text x="98" y="592" class="small">Explain / explain + verify</text>
-  </g>
-  <path d="M350 480H382V281H410" class="flow" />
-  <g filter="url(#shadow)">
-    <rect x="420" y="210" width="600" height="142" rx="16" class="card" />
-    <circle cx="464" cy="256" r="22" fill="#dcebdc" />
-    <text x="457" y="262" class="number">01</text>
-    <text x="502" y="258" class="card-title">Map functional blocks</text>
-    <text x="502" y="294" class="body">Find entry points, core logic, data flow, and outputs</text>
-    <text x="502" y="324" class="small">Follow actual call relationships, not arbitrary line groups</text>
-    <rect x="420" y="380" width="600" height="142" rx="16" class="card" />
-    <circle cx="464" cy="426" r="22" fill="#e6e8f3" />
-    <text x="457" y="432" class="number">02</text>
-    <text x="502" y="428" class="card-title">Explain responsibilities and source</text>
-    <text x="502" y="464" class="body">Inputs, processing, outputs, and connected blocks</text>
-    <text x="502" y="494" class="small">Show files, symbols, line ranges, and relevant excerpts</text>
-    <rect x="420" y="550" width="600" height="142" rx="16" class="card" />
-    <circle cx="464" cy="596" r="22" fill="#faedcf" />
-    <text x="457" y="602" class="number">03</text>
-    <text x="502" y="598" class="card-title">Verify actual behavior</text>
-    <text x="502" y="634" class="body">Run applicable checks against independent expectations</text>
-    <text x="502" y="664" class="small">Record evidence, coverage, and what remains unchecked</text>
-    <rect x="420" y="720" width="600" height="142" rx="16" class="card" />
-    <circle cx="464" cy="766" r="22" fill="#f2e2db" />
-    <text x="457" y="772" class="number">04</text>
-    <text x="502" y="768" class="card-title">Record evidence-based status</text>
-    <text x="502" y="804" class="body">Connect goals, source locations, and observations</text>
-    <text x="502" y="834" class="small">A local check passing does not prove the full goal</text>
-  </g>
-  <path d="M720 353V372" class="flow" />
-  <path d="M720 523V542" class="flow" />
-  <path d="M720 693V712" class="flow" />
-  <path d="M1022 790H1052V379H1075" class="flow" />
-  <path d="M1052 531H1075" class="flow" />
-  <path d="M1052 766H1075" class="flow" stroke-dasharray="5 5" />
-  <g filter="url(#shadow)">
-    <rect x="1090" y="254" width="302" height="214" rx="16" fill="#e5f1e8" stroke="#82ae8f" stroke-width="1.8" />
-    <rect x="1110" y="276" width="80" height="27" rx="13" fill="#176549" />
-    <text x="1122" y="295" class="step">Default</text>
-    <text x="1112" y="339" class="output-title">Illustrated HTML guide</text>
-    <text x="1112" y="376" class="output-body">Color-coded map and navigation</text>
-    <text x="1112" y="404" class="output-body">Source, responsibilities, evidence</text>
-    <text x="1112" y="432" class="output-body">code-breakdown.html</text>
-    <rect x="1090" y="495" width="302" height="166" rx="16" fill="#edf0f7" stroke="#9aa9c2" stroke-width="1.8" />
-    <rect x="1110" y="517" width="80" height="27" rx="13" fill="#445a78" />
-    <text x="1122" y="536" class="step">Default</text>
-    <text x="1112" y="580" class="output-title">Markdown companion</text>
-    <text x="1112" y="617" class="output-body">Roles, locations, and evidence</text>
-    <text x="1112" y="643" class="output-body">code-breakdown.md</text>
-    <rect x="1090" y="688" width="302" height="166" rx="16" fill="#fff3dc" stroke="#d2ad64" stroke-width="1.8" />
-    <rect x="1110" y="710" width="80" height="27" rx="13" fill="#895d12" />
-    <text x="1122" y="729" class="step">Optional</text>
-    <text x="1112" y="773" class="output-title">Full review report</text>
-    <text x="1112" y="810" class="output-body">HTML / Markdown overview</text>
-    <text x="1112" y="838" class="output-body">Effective JSON review record</text>
-  </g>
-  <rect x="50" y="908" width="1340" height="74" rx="14" fill="#fff" stroke="#d8e1d9" />
-  <text x="74" y="941" class="small" style="font-weight:700">STATUS</text>
-  <circle cx="194" cy="937" r="8" fill="#21804e" />
-  <text x="210" y="943" class="small">Verified in scope</text>
-  <circle cx="397" cy="937" r="8" fill="#bd3434" />
-  <text x="413" y="943" class="small">Confirmed issue</text>
-  <circle cx="577" cy="937" r="8" fill="#c18a1a" />
-  <text x="593" y="943" class="small">Pending</text>
-  <circle cx="716" cy="937" r="8" fill="#858b92" />
-  <text x="732" y="943" class="small">Unchecked</text>
-  <text x="74" y="967" class="small">Unavailable runtime means unchecked. This workflow diagram is not execution evidence.</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1060" viewBox="0 0 1440 1060" role="img" aria-labelledby="title desc">
+<title id="title">Simple Reviewer: Understand what your AI actually built.</title>
+<desc id="desc">Goals, changes, code map, verification, risks and next actions. HTML, Markdown and effective review record.</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#5b6c4c"/></marker></defs>
+<style>text{font-family:"Segoe UI","Microsoft YaHei",sans-serif;fill:#262626}.hero{font-size:45px;font-weight:800;letter-spacing:-1px}.title{font-size:23px;font-weight:750}.body{font-size:18px;fill:#56614e}.small{font-size:16px;fill:#60685d}.white{font-size:26px;font-weight:750;fill:#fff}.num{font-size:18px;font-weight:800;fill:#d5ff70}.flow{fill:none;stroke:#5b6c4c;stroke-width:2;marker-end:url(#arrow)}</style>
+<rect x="0" y="0" width="1440" height="1060" rx="25" fill="#fdfff7" stroke="#fdfff7"/>
+<text x="48" y="57" class="title">Simple Reviewer</text>
+<rect x="1202" y="25" width="186" height="44" rx="22" fill="#20241f" stroke="#20241f"/>
+<text x="1225" y="54" class="num">Vibe Coding / 1.2</text>
+<text x="48" y="137" class="hero">Understand what your AI actually built.</text>
+<text x="48" y="181" class="body">Simple Reviewer 1.2 / A readable Vibe Coding review</text>
+<rect x="48" y="226" width="264" height="410" rx="26" fill="#20241f" stroke="#20241f"/>
+<text x="74" y="292" class="white">Your code.</text>
+<text x="74" y="339" class="white">Your goals.</text>
+<text x="74" y="386" class="white">Your questions.</text>
+<text x="74" y="525" class="small" style="fill:#d6e2ca">Start with ordinary words.</text>
+<text x="74" y="555" class="small" style="fill:#d6e2ca">No coding vocabulary needed.</text>
+<rect x="355" y="226" width="326" height="174" rx="20" fill="#fff" stroke="#dfe3d7"/>
+<rect x="375" y="244" width="45" height="34" rx="17" fill="#20241f" stroke="#20241f"/>
+<text x="385" y="268" class="num">01</text>
+<text x="375" y="313" class="title">Clarify the goal</text>
+<text x="375" y="349" class="small">Turn intent into observable checks.</text>
+<text x="375" y="376" class="small">Keep assumptions and questions visible.</text>
+<rect x="709" y="226" width="326" height="174" rx="20" fill="#fff" stroke="#dfe3d7"/>
+<rect x="729" y="244" width="45" height="34" rx="17" fill="#20241f" stroke="#20241f"/>
+<text x="739" y="268" class="num">02</text>
+<text x="729" y="313" class="title">Explain the changes</text>
+<text x="729" y="349" class="small">What changed? What will users see?</text>
+<text x="729" y="376" class="small">Compare files against a named baseline.</text>
+<rect x="1063" y="226" width="326" height="174" rx="20" fill="#fff" stroke="#dfe3d7"/>
+<rect x="1083" y="244" width="45" height="34" rx="17" fill="#20241f" stroke="#20241f"/>
+<text x="1093" y="268" class="num">03</text>
+<text x="1083" y="313" class="title">Map the code</text>
+<text x="1083" y="349" class="small">Explain inputs, duties, and outputs.</text>
+<text x="1083" y="376" class="small">Show files, symbols, and line numbers.</text>
+<rect x="1063" y="462" width="326" height="174" rx="20" fill="#fff" stroke="#dfe3d7"/>
+<rect x="1083" y="480" width="45" height="34" rx="17" fill="#20241f" stroke="#20241f"/>
+<text x="1093" y="504" class="num">04</text>
+<text x="1083" y="549" class="title">Verify the behavior</text>
+<text x="1083" y="585" class="small">Run independent, relevant checks.</text>
+<text x="1083" y="612" class="small">Record actual results and limitations.</text>
+<rect x="709" y="462" width="326" height="174" rx="20" fill="#fff" stroke="#dfe3d7"/>
+<rect x="729" y="480" width="45" height="34" rx="17" fill="#20241f" stroke="#20241f"/>
+<text x="739" y="504" class="num">05</text>
+<text x="729" y="549" class="title">Surface the risks</text>
+<text x="729" y="585" class="small">Data, keys, permissions, cost.</text>
+<text x="729" y="612" class="small">Say what ran and what is unknown.</text>
+<rect x="355" y="462" width="326" height="174" rx="20" fill="#fff" stroke="#dfe3d7"/>
+<rect x="375" y="480" width="45" height="34" rx="17" fill="#20241f" stroke="#20241f"/>
+<text x="385" y="504" class="num">06</text>
+<text x="375" y="549" class="title">Choose the next step</text>
+<text x="375" y="585" class="small">One clear action at a time.</text>
+<text x="375" y="612" class="small">Recheck affected paths after a fix.</text>
+<path d="M315 310H345" class="flow"/>
+<path d="M683 310H699" class="flow"/>
+<path d="M1037 310H1053" class="flow"/>
+<path d="M1226 403V451" class="flow"/>
+<path d="M1060 550H1045" class="flow"/>
+<path d="M706 550H691" class="flow"/>
+<path d="M518 639V688" class="flow"/>
+<rect x="48" y="708" width="434" height="155" rx="20" fill="#edf4e0" stroke="#dfe3d7"/>
+<text x="72" y="751" class="title">Read the overview</text>
+<text x="72" y="790" class="body">reviewer-overview.html / .md</text>
+<text x="72" y="831" class="small">Goals, changes, checks, risks, next steps</text>
+<rect x="502" y="708" width="434" height="155" rx="20" fill="#fff" stroke="#dfe3d7"/>
+<text x="526" y="751" class="title">Explore the code</text>
+<text x="526" y="790" class="body">code-breakdown.html / .md</text>
+<text x="526" y="831" class="small">Block map, source locations, evidence</text>
+<rect x="956" y="708" width="434" height="155" rx="20" fill="#fff" stroke="#dfe3d7"/>
+<text x="980" y="751" class="title">Keep the record</text>
+<text x="980" y="790" class="body">report.html / .md + effective JSON</text>
+<text x="980" y="831" class="small">Full review and snapshot for rechecking</text>
+<text x="48" y="904" class="body">Overview and full record: render. Detailed explanation only: breakdown.</text>
+<circle cx="58" cy="957" r="8" fill="#21804e"/>
+<text x="78" y="964" class="body">Verified in scope</text>
+<circle cx="340" cy="957" r="8" fill="#bd3434"/>
+<text x="360" y="964" class="body">Confirmed issue</text>
+<circle cx="622" cy="957" r="8" fill="#b58019"/>
+<text x="642" y="964" class="body">Pending</text>
+<circle cx="904" cy="957" r="8" fill="#858b92"/>
+<text x="924" y="964" class="body">Unchecked</text>
+<text x="48" y="1018" class="small">Colors are evidence states, not quality scores. This diagram is a workflow, not a test result.</text>
 </svg>

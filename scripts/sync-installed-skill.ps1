@@ -12,7 +12,7 @@ foreach ($target in @($destination, $oldInstallation)) {
 }
 if ([IO.Path]::GetFullPath($repoPath) -eq $destination) { throw 'Run this installer from the repository checkout, not from the installed skill.' }
 Write-Host 'Installing Simple Reviewer in the configured Codex skills directory...'
-$required = @('SKILL.md', 'agents', 'assets', 'references', 'scripts', 'README.md', ([string][char]0x4f7f + [char]0x7528 + [char]0x8bf4 + [char]0x660e + '.md'))
+$required = @('SKILL.md', 'agents', 'assets', 'references', 'scripts', 'docs', 'README.md', ([string][char]0x4f7f + [char]0x7528 + [char]0x8bf4 + [char]0x660e + '.md'))
 foreach ($entry in $required) {
     if (-not (Test-Path -LiteralPath (Join-Path $repoPath $entry))) { throw "Missing installation resource: $entry" }
 }

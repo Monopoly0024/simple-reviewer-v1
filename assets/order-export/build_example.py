@@ -121,6 +121,28 @@ def main():
                     'impact': '匹配订单超过20条时导出不完整',
                     'suggestion': '拆分筛选与分页，导出使用全部筛选结果，保留列表原分页行为'}],
         'evidence': evidence}
+    record['user_goal'] = {
+        'original_request': '演示需求：导出全部符合状态的订单，字段为 id、status、total。',
+        'plain_language': '列表可以分多页看，但导出应该拿到全部匹配数据。',
+        'assumptions': ['仅验证内存中的示例数据，不连接真实订单系统。'],
+        'open_questions': ['实际文件下载和异常反馈尚未验证。']}
+    record['change_summary'] = {
+        'baseline': '独立缺陷演示，无 AI 变更前的 Git 基线；不声称本次修改了业务代码。',
+        'files_added': [], 'files_modified': [], 'files_deleted': [],
+        'user_visible_changes': [],
+        'possible_impacts': ['export_orders 复用列表默认分页，35 条匹配订单只返回 20 条。']}
+    record['risks'] = [{
+        'title': '数据交付不完整', 'action': '把导出结果作为完整订单清单使用',
+        'status': 'not-run', 'impact': '本次只执行内存样例检查；没有生成真实订单文件。当前导出逻辑会遗漏 15 条。',
+        'next_step': '修复分页复用后重跑完整性检查，再验证真实文件下载。'}]
+    record['next_actions'] = [
+        {'action': '先修复导出分页', 'reason': '把完整筛选结果和列表分页分开，保留原列表行为。'},
+        {'action': '复验 35 条数据', 'reason': '重跑 E1，确认返回 35 条且订单 ID 完整。'},
+        {'action': '单独检查下载和异常', 'reason': '当前样例没有提供完整页面和文件交付链路。'}]
+    record['comprehension'] = {'glossary': [
+        {'term': '分页', 'meaning': '把一份列表分几次显示；导出全部时不能只拿第一页。'},
+        {'term': '运行证据', 'meaning': '实际执行得到的结果，仅证明记录中的输入和场景。'},
+        {'term': '端到端', 'meaning': '从用户发起操作一直检查到最终收到结果，中间环节都需要覆盖。'}]}
     output = ROOT.parent / 'review.example.json'
     output.write_bytes((json.dumps(record, ensure_ascii=False, indent=2) + '\n').encode('utf-8'))
     print(f'Rebuilt {output}; intentionally failing completeness check exit={run.returncode}')
