@@ -24,10 +24,6 @@ COLORS = {'passed': ('#dcfce7', '#15803d', '#14532d'),
           'unchecked': ('#f3f4f6', '#6b7280', '#374151')}
 
 
-def block_theme(key):
-    return ('violet', 'cyan', 'pink', 'blue', 'teal')[(int(key[1:]) - 1) % 5]
-
-
 def report_theme():
     """Embed the licensed font so each report stays usable offline."""
     assets = Path(__file__).resolve().parent.parent / 'assets'
@@ -43,7 +39,7 @@ def document_previews(data):
     cards = []
     for block in data['blocks'][:3]:
         state = block['status']
-        cards.append(f'<article class="document-card" data-theme="{block_theme(block["id"])}"><div class="document-head"><span>代码职责 / '
+        cards.append('<article class="document-card"><div class="document-head"><span>代码职责 / '
                      + html.escape(block['id']) + '</span><b>' + html.escape(block['id'])
                      + '</b></div><div class="document-body"><p><small>block:</small> <mark>'
                      + html.escape(block['title']) + '</mark></p><p><b>作用</b><br>'
@@ -605,6 +601,8 @@ def markdown(data):
 
 def graph_svg(data):
     nodes = data['nodes']
+    titles = {n['id']: textwrap.wrap(n['id'] + ' ' + n['title'], width=16) for n in nodes}
+    box_height = max(104, max(len(lines) for lines in titles.values()) * 22 + 54)
     normal = [e for e in data['edges'] if e['kind'] != 'affected']
     indegree = {n['id']: 0 for n in nodes}
     ranks = {n['id']: 0 for n in nodes}
@@ -634,9 +632,9 @@ def graph_svg(data):
         rank = ranks[node['id']]
         col = counts.get(rank, 0)
         counts[rank] = col + 1
-        positions[node['id']] = (36 + col * 278, 36 + rank * 134)
-    width = max(x for x, _ in positions.values()) + 288
-    height = max(y for _, y in positions.values()) + 122
+        positions[node['id']] = (36 + col * 320, 36 + rank * (box_height + 62))
+    width = max(x for x, _ in positions.values()) + 332
+    height = max(y for _, y in positions.values()) + box_height + 36
     parts = [f'<svg viewBox="0 0 {width} {height}" style="max-width:{width}px;min-width:{width}px" role="group" aria-label="代码职责与验证状态流程图">',
              '<defs><marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8" fill="context-stroke"/></marker></defs>']
     issues = {i['id']: i for i in data['issues']}
@@ -644,20 +642,20 @@ def graph_svg(data):
         sx, sy = positions[edge['source']]
         tx, ty = positions[edge['target']]
         linked = [issues[key] for key in edge.get('issue_ids', [])]
-        color = '#64748b'
+        color = '#596355'
         if linked:
             color = '#b91c1c' if any(i['status'] == 'confirmed' and not i['stale'] for i in linked) else '#a16207'
         if ty > sy and tx == sx:
-            path = f'M{sx + 120},{sy + 92} L{tx + 120},{ty - 4}'
-            lx, ly = sx + 128, (sy + 92 + ty) / 2
+            path = f'M{sx + 140},{sy + box_height} L{tx + 140},{ty - 4}'
+            lx, ly = sx + 148, (sy + box_height + ty) / 2
         elif ty > sy:
-            mid = (sy + 92 + ty) / 2
-            path = f'M{sx + 120},{sy + 92} V{mid} H{tx + 120} V{ty - 4}'
-            lx, ly = (sx + tx) / 2 + 120, mid - 7
+            mid = (sy + box_height + ty) / 2
+            path = f'M{sx + 140},{sy + box_height} V{mid} H{tx + 140} V{ty - 4}'
+            lx, ly = (sx + tx) / 2 + 140, mid - 7
         else:
             lane = min(sx, tx) - 13 - (index % 3) * 7
-            path = f'M{sx},{sy + 46} H{lane} V{ty + 46} H{tx - 4}'
-            lx, ly = lane + 4, (sy + ty) / 2 + 42
+            path = f'M{sx},{sy + box_height / 2} H{lane} V{ty + box_height / 2} H{tx - 4}'
+            lx, ly = lane + 4, (sy + ty + box_height) / 2
         dash = ' stroke-dasharray="5 4"' if edge['kind'] != 'normal' else ''
         label = html.escape(edge['label'])
         parts.append(f'<path d="{path}" fill="none" stroke="{color}" stroke-width="1.7" marker-end="url(#arrow)"{dash}><title>{label}</title></path>')
@@ -669,10 +667,10 @@ def graph_svg(data):
         label = html.escape(node['id'] + ' ' + node['title'])
         dash = ' stroke-dasharray="6 4"' if node['role'] == 'missing' else ''
         parts.append(f'<g class="node" role="button" tabindex="0" data-node="{node["id"]}" aria-label="{label}，{LABELS[node["status"]]}" aria-pressed="false">')
-        parts.append(f'<rect x="{x}" y="{y}" width="240" height="92" rx="9" fill="{fill}" stroke="{stroke}" stroke-width="1.8"{dash}/>')
-        for line_num, line in enumerate(textwrap.wrap(node['id'] + ' ' + node['title'], width=18)[:2]):
-            parts.append(f'<text x="{x + 14}" y="{y + 25 + line_num * 19}" fill="{color}" class="node-title">{html.escape(line)}</text>')
-        parts.append(f'<text x="{x + 14}" y="{y + 75}" fill="{color}">{LABELS[node["status"]]}</text></g>')
+        parts.append(f'<rect x="{x}" y="{y}" width="280" height="{box_height}" rx="10" fill="{fill}" stroke="{stroke}" stroke-width="1.8"{dash}/>')
+        for line_num, line in enumerate(titles[node['id']]):
+            parts.append(f'<text x="{x + 16}" y="{y + 28 + line_num * 22}" fill="{color}" class="node-title">{html.escape(line)}</text>')
+        parts.append(f'<text x="{x + 16}" y="{y + box_height - 18}" fill="{color}">{LABELS[node["status"]]}</text></g>')
     parts.append('</svg>')
     return ''.join(parts)
 
@@ -738,6 +736,7 @@ def illustrated_breakdown(data, include_overview=False, guide=None):
     esc = lambda value: html.escape(str(value), quote=True)
     badge = lambda state: f'<span class="badge {state}">{LABELS[state]}</span>'
     paragraph = lambda label, text: f'<div><small>{esc(label)}</small><p>{esc(text)}</p></div>'
+    stage = lambda key, label, text: f'<div data-stage="{key}"><small>{esc(label)}</small><p>{esc(text)}</p></div>'
     nodes = {n['id']: n for n in data['nodes']}
     issues = {i['id']: i for i in data['issues']}
     evidence = {e['id']: e for e in data['evidence']}
@@ -792,23 +791,23 @@ def illustrated_breakdown(data, include_overview=False, guide=None):
         locations = [loc for node in members for loc in node['locations']]
         position = locations[0] if locations else None
         source_label = f'{position["path"]}:{position["line"]}' if position else '尚未登记源码位置'
-        catalog.append(f'<a class="catalog-card" href="#{key}" data-block="{key}" data-theme="{block_theme(key)}">'
+        catalog.append(f'<a class="catalog-card" href="#{key}" data-block="{key}">'
                        f'<div class="catalog-card-head"><span class="catalog-icon">{key}</span><div>'
                        f'<h3>{esc(block["title"])}</h3><small>{len(members)} 个职责节点</small></div></div>'
                        f'<p>{esc(block["purpose"])}</p>{badge(state)}<div class="catalog-card-foot">'
                        f'<span>{esc(source_label)}</span><b>查看拆解 ↗</b></div></a>')
-        content.append(f'<section class="block {state}" id="{key}" data-theme="{block_theme(key)}"><div class="block-heading">'
+        content.append(f'<section class="block {state}" id="{key}"><div class="block-heading">'
                        f'<span class="block-no">{key}</span><h2>{esc(block["title"])}</h2>{badge(state)}</div>'
                        f'<p class="purpose">{esc(block["purpose"])}</p>')
         explanation = block.get('explanation', {})
         if explanation.get('summary'):
             content.append(f'<p>{esc(explanation["summary"])}</p>')
         content.append('<div class="reading-flow" aria-label="板块输入、职责与输出示意">'
-                       + paragraph('输入', '；'.join(dict.fromkeys(n['input'] for n in members)))
+                       + stage('input', '输入', '；'.join(dict.fromkeys(n['input'] for n in members)))
                        + '<span class="arrow" aria-hidden="true">→</span>'
-                       + paragraph('承担职责', block['purpose'])
+                       + stage('process', '承担职责', block['purpose'])
                        + '<span class="arrow" aria-hidden="true">→</span>'
-                       + paragraph('输出', '；'.join(dict.fromkeys(n['output'] for n in members))) + '</div>')
+                       + stage('output', '输出', '；'.join(dict.fromkeys(n['output'] for n in members))) + '</div>')
         if explanation.get('steps'):
             content.append('<h3>这块怎样工作</h3><p class="muted">审查者提供的逻辑示意，不代表执行轨迹。</p><ol class="steps">'
                            + ''.join(f'<li><strong>{esc(s["title"])}</strong><p>{esc(s["detail"])}</p></li>'

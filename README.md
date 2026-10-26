@@ -47,7 +47,7 @@ Provide your code and intended outcome. The skill maps functional blocks, explai
 
 The HTML report is organized like a small review workspace: the goal and current verdict come first, followed by change summary, functional blocks, verification evidence, risks, and next actions. Technical details remain expandable so a new user can read the conclusion before opening source code.
 
-**Topic colors help you follow a block:** violet, cyan, pink, blue, and teal connect its catalog card, heading, input/output panels, and source disclosures. They follow the block ID and do not change with its review outcome.
+**Contrast follows the content:** parallel cards use the same white treatment. Within a block, white input, green processing, and light-green output panels make the transformation visible; black section headers establish the reading hierarchy. Colors do not rotate with block IDs.
 
 **Status badges describe verification, not a quality score:** green means verified within the recorded scope; red means a confirmed issue; yellow means pending verification; gray means unchecked. The responsibility graph uses these status colors too. Static reading does not count as a successful runtime check. Missing runtime access is recorded explicitly.
 
@@ -116,7 +116,7 @@ Open `review-output/reviewer-overview.html` after `render` for the plain-languag
 
 The visual direction combines Open Design's homepage reading hierarchy with its Arena page's comparison and grouping patterns, using the requested `ai-website-cloner-template` inspection workflow. It is adapted for offline code review: original report content, embedded fonts, local links, and evidence-state colors. It does not reproduce Open Design's branding, illustrations, rankings, or hosted services. See [the design notes](docs/superpowers/specs/2026-10-26-reviewer-1.2-design.md).
 
-The HTML reports combine the OpenDesign Skills reading shell with the Arena page's pastel comparison panels: `#FAFAFA` canvas, `#262626` typography and actions, violet/cyan/pink topic cards, blue/teal supporting blocks, and matching colored headings and borders. Soft panel backgrounds make each responsibility easier to follow while source code stays dark and verification badges retain their own meaning. Albert Sans is embedded for offline reading under the SIL Open Font License; see `assets/fonts/OFL.txt`. This is a style reference, not a copy of OpenDesign content or branding.
+The HTML reports use the Arena reference's black, white, and green contrast: `#172017` section headers, white peer cards, `#70F28B` processing panels, and `#E1F1E1` output or supporting panels. Parallel items share a style; emphasis belongs to a transformation, a changed value, or a reading milestone. Albert Sans is embedded for offline reading under the SIL Open Font License; see `assets/fonts/OFL.txt`. Headlines use lighter 550–560 weights, section titles are 24–36px, and diagrams keep legible labels instead of shrinking the entire graphic on a phone. Verification badges retain their independent red/yellow/green/gray meanings. This is a style reference, not a copy of OpenDesign content or branding.
 
 All three HTML reports now share a fixed page navigation bar: **Overview / Code breakdown / Full report**, with the current page highlighted. To link back to a separate illustrated guide, add `--guide-page path/to/guide.html --guide-label "Illustrated guide"` to the render command and provide report links in that guide. This adds a local relative link; it does not bundle or upload the guide. Keep the generated pages together when moving or sharing them. A breakdown-only export never links to reports that were not generated.
 
@@ -233,7 +233,7 @@ python -B assets/order-export/build_example.py
 
 视觉混合参考 Open Design 首页的阅读层级与 Arena 页的信息分组，并采用指定的 `ai-website-cloner-template` 检视流程，按离线代码审阅场景调整。报告使用自己的内容、内嵌字体、本地链接和证据状态色；设计对应关系见[设计说明](docs/superpowers/specs/2026-10-26-reviewer-1.2-design.md)。
 
-HTML 报告混合参考 Skills 页的阅读框架和 Arena 页的淡彩对比面板：`#FAFAFA` 画布、`#262626` 文字与主按钮，搭配紫、青、粉、蓝、青绿五组板块主题色。目录卡、标题、输入输出面板与源码折叠栏沿用同一板块颜色，浅色背景帮助区分职责，正文保持深色。主题色按板块编号分配，不表示验证通过与否；验证结论继续使用带文字的红、黄、绿、灰标签，职责流程图也保留状态色。内嵌 Albert Sans 字体按 SIL Open Font License 发布，许可文本见 `assets/fonts/OFL.txt`。这里只参考视觉语言，不复制 OpenDesign 的内容或品牌。
+HTML 图解采用参考 Arena 页的黑、白、绿对比：`#172017` 黑色标题栏、白色同级卡片、`#70F28B` 绿色处理面板和 `#E1F1E1` 浅绿色输出或辅助面板。并列内容保持一种样式，递进、参数改写和关键变化再用颜色强调，不按板块编号轮换颜色。标题采用较轻的 550–560 字重，小节标题约 24–36px；图中文字按阅读需要放大，窄屏可在图内滚动，避免整体缩小到看不清。验证结论仍由带文字的红、黄、绿、灰标签与状态图表示，绿色大面板不等于验证通过。内嵌 Albert Sans 字体按 SIL Open Font License 发布，许可文本见 `assets/fonts/OFL.txt`。这里只参考视觉语言，不复制 OpenDesign 的内容或品牌。
 
 三张 HTML 页面都有固定的“审阅总览 / 代码拆解 / 完整报告”导航，当前页突出显示。若另有专题讲解页，生成时加 `--guide-page 专题图解.html --guide-label "专题图解"`，并在专题页提供进入报告的链接，即可双向切换。参数只增加本地相对链接，不打包或上传专题内容。移动、分享时请保留页面之间的目录关系；仅拆解模式不会显示未生成的完整报告入口。
 

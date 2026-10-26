@@ -1,4 +1,5 @@
 """Build the English/Chinese landscape and portrait workflow diagrams."""
+import base64
 from html import escape
 from pathlib import Path
 
@@ -22,7 +23,7 @@ COPY = {
                     ('Keep the record', ['report.html / .md + effective JSON', 'Full review and snapshot for rechecking'])],
         'note': 'Overview and full record: render. Detailed explanation only: breakdown.',
         'legend': ['Verified in scope', 'Confirmed issue', 'Pending', 'Unchecked'],
-        'footer': 'Colors are evidence states, not quality scores. This diagram is a workflow, not a test result.'},
+        'footer': 'Status markers describe evidence. Panel fills organize the workflow; this is not a test result.'},
     'zh': {
         'title': '看懂 AI 写了什么，再决定下一步。',
         'sub': 'Simple Reviewer 1.2 / 为 Vibe Coding 提供可读、可核对的审阅',
@@ -40,7 +41,7 @@ COPY = {
                     ('保留复核记录', ['report.html / .md + effective JSON', '完整审查与文件快照，供后续复验'])],
         'note': 'render 生成总览和完整记录；breakdown 只生成代码拆解两文件。',
         'legend': ['范围内验证通过', '已确认问题', '待核实', '未验证'],
-        'footer': '颜色表示证据状态，不是质量分数。这是使用流程图，不是实际检查结果。'}
+        'footer': '状态标记表示验证结论；黑白绿底色组织阅读层级。使用流程图不是实际检查结果。'}
 }
 
 
@@ -49,20 +50,22 @@ def text(x, y, value, cls='body', fill=None):
     return f'<text x="{x}" y="{y}" class="{cls}"{color}>{escape(value)}</text>'
 
 
-def rect(x, y, w, h, fill='#fff', stroke='#dfe3d7', radius=20):
+def rect(x, y, w, h, fill='#fff', stroke='#d4ddd1', radius=12):
     return f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="{radius}" fill="{fill}" stroke="{stroke}"/>'
 
 
 def document(language, mobile):
     c = COPY[language]
     width, height = (390, 1790) if mobile else (1440, 1060)
-    heading = 28 if mobile else 45
+    heading = 28 if mobile else 44
+    font = base64.b64encode((ASSETS / 'fonts/AlbertSans-VariableFont_wght.woff2').read_bytes()).decode('ascii')
+    face = '@font-face{font-family:"Albert Sans";font-weight:100 900;src:url(data:font/woff2;base64,' + font + ') format("woff2");}'
     pieces = [f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}" role="img" aria-labelledby="title desc">',
               f'<title id="title">Simple Reviewer: {escape(c["title"])}</title>',
               '<desc id="desc">Goals, changes, code map, verification, risks and next actions. HTML, Markdown and effective review record.</desc>',
-              '<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#5b6c4c"/></marker></defs>',
-              f'<style>text{{font-family:"Segoe UI","Microsoft YaHei",sans-serif;fill:#262626}}.hero{{font-size:{heading}px;font-weight:800;letter-spacing:-1px}}.title{{font-size:23px;font-weight:750}}.body{{font-size:18px;fill:#56614e}}.small{{font-size:16px;fill:#60685d}}.white{{font-size:26px;font-weight:750;fill:#fff}}.num{{font-size:18px;font-weight:800;fill:#d5ff70}}.flow{{fill:none;stroke:#5b6c4c;stroke-width:2;marker-end:url(#arrow)}}</style>',
-              rect(0, 0, width, height, '#fdfff7', '#fdfff7', 25)]
+              '<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#172017"/></marker></defs>',
+              f'<style>{face}text{{font-family:"Albert Sans","PingFang SC","Microsoft YaHei",sans-serif;fill:#172017}}.hero{{font-size:{heading}px;font-weight:550;letter-spacing:-1px}}.title{{font-size:23px;font-weight:560}}.body{{font-size:18px;fill:#172017}}.small{{font-size:16px;fill:#596355}}.white{{font-size:26px;font-weight:550;fill:#fff}}.num{{font-size:18px;font-weight:600;fill:#70f28b}}.flow{{fill:none;stroke:#172017;stroke-width:2;marker-end:url(#arrow)}}</style>',
+              rect(0, 0, width, height, '#f8f8f8', '#f8f8f8', 12)]
     if mobile:
         pieces += [text(22, 42, 'Simple Reviewer', 'title'), text(22, 72, 'Vibe Coding / 1.2.0', 'small')]
         hero_lines = ['Understand your code.', 'Choose your next step.'] if language == 'en' else ['看懂 AI 写了什么，', '再决定下一步。']
@@ -73,18 +76,19 @@ def document(language, mobile):
                    text(36, 282, 'No coding vocabulary needed.' if language == 'en' else '不需要先学会编程术语。', 'small', '#d6e2ca')]
         for index, (title, detail) in enumerate(c['steps']):
             y = 332 + index * 145
-            pieces += [f'<path d="M195 {y-27}V{y-8}" class="flow"/>', rect(18, y, 354, 118),
+            stage_fill = '#70f28b' if index == 3 else '#e1f1e1' if index == 5 else '#fff'
+            pieces += [f'<path d="M195 {y-27}V{y-8}" class="flow"/>', rect(18, y, 354, 118, stage_fill),
                        rect(34, y+15, 38, 31, '#20241f', '#20241f', 16), text(42, y+37, f'{index+1:02d}', 'num'),
                        text(83, y+38, title, 'title'), text(34, y+75, detail[0], 'small'), text(34, y+101, detail[1], 'small')]
         y = 1216
         for index, (title, detail) in enumerate(c['outputs']):
             current = y + index * 123
-            pieces += [rect(18, current, 354, 106, '#edf4e0' if index == 0 else '#fff'),
+            pieces += [rect(18, current, 354, 106, '#fff'),
                        text(34, current+32, title, 'title'), text(34, current+62, detail[0], 'small'), text(34, current+88, detail[1], 'small')]
         for index, (color, label) in enumerate(zip(['#21804e','#bd3434','#b58019','#858b92'], c['legend'])):
             x, y = 30 + (index % 2)*180, 1624 + (index//2)*42
             pieces += [f'<circle cx="{x}" cy="{y}" r="6" fill="{color}"/>', text(x+14, y+6, label, 'small')]
-        foot = ['Colors show verification states.', 'A workflow is not a test result.'] if language == 'en' else ['颜色表示验证状态，不是质量评分。', '流程图不代表实际验证已经完成。']
+        foot = ['Panel fills organize the workflow.', 'A workflow is not a test result.'] if language == 'en' else ['底色组织阅读，状态标记表示结论。', '流程图不代表实际验证已经完成。']
         pieces += [text(22, 1730, foot[0], 'small'), text(22, 1758, foot[1], 'small')]
     else:
         pieces += [text(48, 57, 'Simple Reviewer', 'title'), rect(1202, 25, 186, 44, '#20241f', '#20241f', 22),
@@ -96,7 +100,8 @@ def document(language, mobile):
             pieces.append(text(74, 525+index*30, line, 'small', '#d6e2ca'))
         positions = [(355,226),(709,226),(1063,226),(1063,462),(709,462),(355,462)]
         for index, ((title, detail), (x,y)) in enumerate(zip(c['steps'], positions)):
-            pieces += [rect(x,y,326,174),rect(x+20,y+18,45,34,'#20241f','#20241f',17),text(x+30,y+42,f'{index+1:02d}','num'),
+            stage_fill = '#70f28b' if index == 3 else '#e1f1e1' if index == 5 else '#fff'
+            pieces += [rect(x,y,326,174,stage_fill),rect(x+20,y+18,45,34,'#172017','#172017',8),text(x+30,y+42,f'{index+1:02d}','num'),
                        text(x+20,y+87,title,'title'),text(x+20,y+123,detail[0],'small'),text(x+20,y+150,detail[1],'small')]
         pieces += ['<path d="M315 310H345" class="flow"/>','<path d="M683 310H699" class="flow"/>',
                    '<path d="M1037 310H1053" class="flow"/>','<path d="M1226 403V451" class="flow"/>',
@@ -104,7 +109,7 @@ def document(language, mobile):
                    '<path d="M518 639V688" class="flow"/>']
         for index, (title, detail) in enumerate(c['outputs']):
             x = 48 + index*454
-            pieces += [rect(x,708,434,155,'#edf4e0' if index==0 else '#fff'),text(x+24,751,title,'title'),
+            pieces += [rect(x,708,434,155,'#fff'),text(x+24,751,title,'title'),
                        text(x+24,790,detail[0],'body'),text(x+24,831,detail[1],'small')]
         pieces.append(text(48,904,c['note'],'body'))
         for index, (color,label) in enumerate(zip(['#21804e','#bd3434','#b58019','#858b92'],c['legend'])):

@@ -20,34 +20,41 @@ const {chromium} = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
     await page.goto(pathToFileURL(html).href);
     const total = await page.locator('section.block').count();
     assert.ok(total > 0);
-    const palette = {violet: ['rgb(250, 248, 255)', 'rgb(73, 53, 138)'],
-      cyan: ['rgb(244, 252, 254)', 'rgb(21, 93, 110)'],
-      pink: ['rgb(255, 247, 252)', 'rgb(128, 55, 101)'],
-      blue: ['rgb(247, 249, 255)', 'rgb(53, 78, 140)'],
-      teal: ['rgb(244, 251, 249)', 'rgb(32, 93, 88)']};
-    const themed = await page.locator('section.block[data-theme]').evaluateAll(blocks => blocks.map(block => {
+    const themed = await page.locator('section.block').evaluateAll(blocks => blocks.map(block => {
       const heading = block.querySelector('.block-heading h2');
       const badge = block.querySelector('.badge');
-      return {id: block.id, theme: block.dataset.theme,
+      return {id: block.id,
         background: getComputedStyle(block).backgroundColor,
+        headingBackground: getComputedStyle(block.querySelector('.block-heading')).backgroundColor,
         headingColor: getComputedStyle(heading).color,
+        stages: [...block.querySelectorAll('.reading-flow > [data-stage]')].map(el =>
+          ({role:el.dataset.stage, background:getComputedStyle(el).backgroundColor})),
         badgeClass: badge && badge.className};
     }));
-    assert.equal(themed.length, total, 'Every block should have a topic theme');
     for (const block of themed) {
-      assert.ok(palette[block.theme], 'Unknown theme on ' + block.id);
-      assert.equal(block.background, palette[block.theme][0], 'Block tint missing on ' + block.id);
-      assert.equal(block.headingColor, palette[block.theme][1], 'Heading accent missing on ' + block.id);
+      assert.equal(block.background, 'rgb(255, 255, 255)', 'Parallel blocks share a white canvas');
+      assert.equal(block.headingBackground, 'rgb(23, 32, 23)');
+      assert.equal(block.headingColor, 'rgb(255, 255, 255)');
+      assert.deepEqual(block.stages, [{role:'input',background:'rgb(255, 255, 255)'},
+        {role:'process',background:'rgb(112, 242, 139)'}, {role:'output',background:'rgb(225, 241, 225)'}],
+        'Contrast should express input/process/output on ' + block.id);
       assert.match(block.badgeClass || '', /badge (passed|failed|pending|unchecked)/,
         'Verification state should remain independently labeled on ' + block.id);
     }
-    const catalogThemes = await page.locator('.catalog-card[data-theme]').evaluateAll(cards =>
-      cards.map(card => ({id: card.getAttribute('href').slice(1), theme: card.dataset.theme})));
-    assert.equal(catalogThemes.length, total, 'Every block should have a themed catalog card');
-    for (const card of catalogThemes) {
-      assert.equal(card.theme, themed.find(block => block.id === card.id).theme,
-        'Catalog and detail theme should match for ' + card.id);
-    }
+    const catalogBackgrounds = await page.locator('.catalog-card').evaluateAll(cards =>
+      cards.map(card => getComputedStyle(card).backgroundColor));
+    assert.equal(catalogBackgrounds.length, total);
+    assert.ok(catalogBackgrounds.every(bg=>bg==='rgb(255, 255, 255)'), 'Parallel catalog cards share one style');
+    assert.equal(await page.locator('[data-theme]').count(), 0, 'No cycling colors by block ID');
+    const clippedPreviews = await page.locator('.document-card').evaluateAll(cards => cards.filter(card=>
+      card.clientHeight>0 && card.scrollHeight>card.clientHeight+1).map(card=>card.innerText));
+    assert.deepEqual(clippedPreviews, [], 'Larger preview text should remain visible');
+    const clippedTitles = await page.locator('.graph-scroll .node').evaluateAll(nodes => nodes.flatMap(node => {
+      const rect = node.querySelector('rect').getBBox();
+      return [...node.querySelectorAll('text')].filter(t=>{const b=t.getBBox();return b.x<rect.x ||
+        b.x+b.width>rect.x+rect.width || b.y+b.height>rect.y+rect.height;}).map(t=>t.textContent);
+    }));
+    assert.deepEqual(clippedTitles, [], 'Graph text should fit inside nodes');
     assert.equal(await page.locator('.reading-flow').count(), total);
     const sourceCount = await page.locator('details.source').count();
     assert.ok(sourceCount > 0);
@@ -93,8 +100,8 @@ const {chromium} = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
     }
     assert.deepEqual(errors, []);
     assert.deepEqual(external, []);
-    const result = {blocks: total, sourceCount, themeAssignments: themed, catalogThemes,
-      topicAndVerificationColorsIndependent: true, widths, keyboardNavigation: true,
+    const result = {blocks: total, sourceCount, semanticContrast: true, parallelCardsUniform: true,
+      verificationLabelsPreserved: true, graphTextFits: true, widths, keyboardNavigation: true,
       filter: true, externalRequests: external, pageErrors: errors};
     if (artifacts) fs.writeFileSync(path.join(artifacts, 'browser-check.json'), JSON.stringify(result, null, 2));
     console.log(JSON.stringify(result));
