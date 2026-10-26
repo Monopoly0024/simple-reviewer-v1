@@ -14,6 +14,12 @@ python <skill目录>/scripts/reviewer_report.py render <review.json> --out <审�
 
 工具 1.2.0 沿用 schema `1.0`。`breakdown` 生成 `code-breakdown.html/.md` 两文件；`render` 再生成 `reviewer-overview.html/.md`、`report.html/.md` 和 `review.effective.json`，共七文件。总览、图解和完整报告使用同一次证据评估结果。
 
+## HTML 页面往返导航
+
+完整 `render` 的三张 HTML 页面共享固定在底部的“页面导航”，可互相切换，当前页用 `aria-current="page"` 标记。仅 `breakdown` 时不生成指向未产出报告的链接。打印时隐藏导航。
+
+已有专题图解可显式传入 `--guide-page <现有HTML路径> --guide-label <按钮文字>`，在三页增加返回入口。参数路径相对于运行命令的目录；生成器转成相对于报告目录的链接，编码空格、中文及 `#` 等字符。不复制或上传专题内容；不自动猜测上级目录是否存在图解。专题页本身仍需提供进入报告的链接。专题 HTML 必须存在，且不能与输出文件重名，否则写文件前报错。不同 Windows 驱动器之间无法生成相对链接，需把页面放到同一驱动器再生成。
+
 ## 可选的日常语言上下文
 
 这些字段由审查者依据用户原话、实际 Git 比较与检查记录填写。生成器只校验和展示，不能自动分析 AI 改动、执行测试或判断这些描述是否真实。缺少字段时显示信息缺口。

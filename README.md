@@ -114,6 +114,10 @@ Open `review-output/reviewer-overview.html` after `render` for the plain-languag
 
 The visual direction combines Open Design's homepage reading hierarchy with its Arena page's comparison and grouping patterns, using the requested `ai-website-cloner-template` inspection workflow. It is adapted for offline code review: original report content, system fonts, local links, and evidence-state colors. It does not reproduce Open Design's branding, illustrations, rankings, or hosted services. See [the design notes](docs/superpowers/specs/2026-10-26-reviewer-1.2-design.md).
 
+The HTML reports use a source-informed OpenDesign Skills visual system: `#FAFAFA` canvas, `#262626` typography and actions, white 8px cards, thin gray rules, compact green highlight tags, and an embedded Albert Sans font. The font is distributed under the SIL Open Font License; see `assets/fonts/OFL.txt`. This is a style reference, not a copy of OpenDesign content or branding.
+
+All three HTML reports now share a fixed page navigation bar: **Overview / Code breakdown / Full report**, with the current page highlighted. To link back to a separate illustrated guide, add `--guide-page path/to/guide.html --guide-label "Illustrated guide"` to the render command and provide report links in that guide. This adds a local relative link; it does not bundle or upload the guide. Keep the generated pages together when moving or sharing them. A breakdown-only export never links to reports that were not generated.
+
 The bundled order-export example deliberately contains a pagination bug: exporting more than 20 matching orders loses records. Rebuild its reproducible evidence with:
 
 ```text
@@ -130,6 +134,7 @@ npx playwright install chromium
 node scripts/test_breakdown_browser.cjs review-output/code-breakdown.html review-output/browser
 node scripts/test_overview_browser.cjs review-output/reviewer-overview.html review-output/overview-browser
 node scripts/test_workflow_browser.cjs
+node scripts/test_page_navigation_browser.cjs
 ```
 
 CI runs Python tests on Windows and Linux and checks the illustrated report in Chromium, including source expansion, keyboard navigation, filtering, offline requests, and 390/700/1024px layouts. The example reports and screenshots are attached to Actions runs.
@@ -226,6 +231,10 @@ python -B assets/order-export/build_example.py
 
 视觉混合参考 Open Design 首页的阅读层级与 Arena 页的信息分组，并采用指定的 `ai-website-cloner-template` 检视流程，按离线代码审阅场景调整。报告使用自己的内容、系统字体、本地链接和证据状态色；设计对应关系见[设计说明](docs/superpowers/specs/2026-10-26-reviewer-1.2-design.md)。
 
+HTML 报告采用参考 Skills 页提取的视觉系统：`#FAFAFA` 画布、`#262626` 文字与主按钮、白色 8px 卡片、细灰色分隔线、少量淡绿色标签，并内嵌 Albert Sans 字体。字体按 SIL Open Font License 发布，许可文本见 `assets/fonts/OFL.txt`。这里只参考视觉语言，不复制 OpenDesign 的内容或品牌。
+
+三张 HTML 页面都有固定的“审阅总览 / 代码拆解 / 完整报告”导航，当前页突出显示。若另有专题讲解页，生成时加 `--guide-page 专题图解.html --guide-label "专题图解"`，并在专题页提供进入报告的链接，即可双向切换。参数只增加本地相对链接，不打包或上传专题内容。移动、分享时请保留页面之间的目录关系；仅拆解模式不会显示未生成的完整报告入口。
+
 当前工具版本为 **1.2.0**，skill 调用名为 `$simple-reviewer-v1`，界面名为“Simple Reviewer · 简单的审阅者1.0”。更新时用仓库完整内容替换原安装目录；仅下载单个 `SKILL.md` 不会更新模板和生成器。生成页面可能含源码与本地路径，请按项目约定保存和分享。
 
 ## 面向不懂代码用户的 Vibe Coding 保护层
@@ -267,6 +276,7 @@ npx playwright install chromium
 node scripts/test_breakdown_browser.cjs review-output/code-breakdown.html review-output/browser
 node scripts/test_overview_browser.cjs review-output/reviewer-overview.html review-output/overview-browser
 node scripts/test_workflow_browser.cjs
+node scripts/test_page_navigation_browser.cjs
 ```
 
 CI 在 Windows/Linux 运行 Python 测试，并在 Chromium 检查源码展开、键盘跳转、筛选、390/700/1024px 宽度及离线请求；订单示例 HTML 和截图随 Actions 产物保存。

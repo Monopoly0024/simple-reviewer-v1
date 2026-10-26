@@ -2,15 +2,18 @@
 """Validate review evidence and render a local report; never execute recorded commands."""
 
 import argparse
+import base64
 import copy
 from datetime import datetime
 import hashlib
 import html
 import json
+import os
 from pathlib import Path
 import re
 import sys
 import textwrap
+from urllib.parse import quote
 
 
 LABELS = {'passed': '已验证通过', 'failed': '已确认问题',
@@ -19,6 +22,29 @@ COLORS = {'passed': ('#dcfce7', '#15803d', '#14532d'),
           'failed': ('#fee2e2', '#b91c1c', '#7f1d1d'),
           'pending': ('#fef3c7', '#a16207', '#713f12'),
           'unchecked': ('#f3f4f6', '#6b7280', '#374151')}
+
+
+def report_theme():
+    """Embed the licensed font so each report stays usable offline."""
+    assets = Path(__file__).resolve().parent.parent / 'assets'
+    font = base64.b64encode((assets / 'fonts' / 'AlbertSans-VariableFont_wght.woff2').read_bytes()).decode('ascii')
+    face = ('@font-face{font-family:"Albert Sans";font-style:normal;font-weight:100 900;'
+            f'font-display:swap;src:url(data:font/woff2;base64,{font}) format("woff2");}}\n')
+    return face + (assets / 'reviewer-theme.css').read_text(encoding='utf-8')
+
+
+def document_previews(data):
+    """Show real block summaries in the source reference's three-document layout."""
+    cards = []
+    for block in data['blocks'][:3]:
+        state = block['status']
+        cards.append('<article class="document-card"><div class="document-head"><span>代码职责 / '
+                     + html.escape(block['id']) + '</span><b>' + html.escape(block['id'])
+                     + '</b></div><div class="document-body"><p><small>block:</small> <mark>'
+                     + html.escape(block['title']) + '</mark></p><p><b>作用</b><br>'
+                     + html.escape(block['purpose']) + '</p><p><span class="badge ' + state + '">'
+                     + LABELS[state] + '</span></p><p><small>预览来自下方真实板块记录。</small></p></div></article>')
+    return '<div class="document-stack" aria-label="代码板块预览">' + ''.join(cards) + '</div>'
 
 
 def optional_context(data):
@@ -648,12 +674,12 @@ def graph_svg(data):
 
 HTML_TEMPLATE = r'''<!doctype html>
 <html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; font-src data:">
 <title>@@TITLE@@</title><style>
-:root{font-family:system-ui,"Microsoft YaHei",sans-serif;color:#17212b;background:#f7f9fb;line-height:1.65}*{box-sizing:border-box}body{margin:0}main{max-width:1240px;margin:auto;padding:28px}h1{font-size:26px;line-height:1.35;margin:0 0 12px}h2{font-size:19px;margin:0 0 16px}h3{font-size:16px;margin:18px 0 8px}p{margin:8px 0}small,.muted{color:#52616f}button{font:inherit;padding:7px 13px;border:1px solid #b4c0cb;border-radius:6px;background:white;color:inherit;cursor:pointer}button:focus-visible,.node:focus-visible{outline:3px solid #2563eb;outline-offset:3px}button[aria-pressed=true]{background:#e7edf5;border-color:#60758d}.badge{display:inline-block;padding:2px 9px;border-radius:5px;font-size:13px}.passed{background:#dcfce7;color:#14532d}.failed{background:#fee2e2;color:#7f1d1d}.pending{background:#fef3c7;color:#713f12}.unchecked{background:#e5e7eb;color:#374151}.legend{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}.columns{display:grid;grid-template-columns:minmax(320px,.95fr) minmax(0,1.2fr);gap:20px;align-items:start}.panel{background:white;border:1px solid #dce3e9;border-radius:10px;padding:20px;min-width:0}.graph{overflow:auto}.graph svg{width:100%;display:block;margin:auto}.node{cursor:pointer}.node text{font-size:13px;pointer-events:none}.node .node-title{font-size:14px;font-weight:600}.node[aria-pressed=true] rect{filter:drop-shadow(0 0 3px #2563eb);stroke-width:3}.edge-label{font-size:11px;paint-order:stroke;stroke:white;stroke-width:4px;stroke-linejoin:round}.toolbar{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 16px}dl{display:grid;grid-template-columns:84px minmax(0,1fr);gap:9px 12px;margin:12px 0}dt{font-weight:600;color:#52616f}dd{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f4f6f8;padding:10px;border-radius:5px;font-size:12px}section{margin-top:20px}.table-wrap{overflow:auto}table{border-collapse:collapse;width:100%;font-size:14px}th,td{text-align:left;padding:11px;border-bottom:1px solid #e1e6eb;vertical-align:top;overflow-wrap:anywhere}summary{cursor:pointer;font-weight:600}details{margin-top:14px;border-top:1px solid #e1e6eb;padding-top:12px}#node-buttons{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0}.note{border-left:3px solid #64748b;padding-left:12px}footer{font-size:12px;color:#52616f;margin-top:24px}@media(max-width:760px){main{padding:16px}.columns{grid-template-columns:1fr}.panel{padding:15px}h1{font-size:22px}dl{grid-template-columns:72px minmax(0,1fr)}}@media print{body{background:white}.toolbar{display:none}.columns{display:block}.panel{border:0;padding:0}.graph svg{max-height:650px}details{break-inside:avoid}}
-header p{overflow-wrap:anywhere}.badge{white-space:nowrap}.table-wrap table{min-width:640px}.graph{border-bottom:1px solid #e1e6eb}.graph svg{width:auto}
-body{background:#fdfff7;color:#262626;font-family:"Segoe UI","Microsoft YaHei",sans-serif}header{padding:24px 0}h1{font-size:clamp(28px,4vw,48px);letter-spacing:-.03em}.panel{border-color:#dfe3d7;border-radius:22px}button{border-radius:999px;background:#20241f;color:#fff;border-color:#20241f;padding:9px 15px}button[aria-pressed=true]{background:#d5ff70;color:#262626;border-color:#798b58}.muted,dt,footer{color:#626b60}a{color:inherit;text-underline-offset:4px}.entry-link{display:inline-block;background:#20241f;color:white;padding:9px 18px;border-radius:999px;text-decoration:none}.graph{background:#f1f4e9;border-radius:14px}.graph svg{max-width:none}pre{background:#f1f4e9}
-</style></head><body><main><header><h1 id="title"></h1><p id="summary"></p><p id="meta" class="muted"></p><p id="journey" class="note"></p>
+@@REPORTSTYLE@@
+@@THEME@@
+@@PAGESTYLE@@
+</style></head><body>@@PAGENAV@@<header class="site-header"><nav class="site-links" aria-label="阅读入口"><a href="reviewer-overview.html">审阅总览</a><a href="code-breakdown.html">代码拆解</a></nav><a class="site-brand" href="reviewer-overview.html">Simple Reviewer</a><div class="site-actions"><span class="site-status">完整审计记录</span><a class="site-button" href="report.md">文字版</a></div></header><main><div class="breadcrumbs">Simple Reviewer <span>/</span> <b>完整报告</b></div><header class="report-intro"><h1 id="title"></h1><p id="summary"></p><p id="meta" class="muted"></p><p id="journey" class="note"></p>
 <p><a class="entry-link" href="reviewer-overview.html">返回审阅总览</a> <a href="code-breakdown.html">查看代码图解</a></p>
 <div class="legend" aria-label="状态图例"><span class="badge passed">绿色 · 已验证通过</span><span class="badge failed">红色 · 已确认问题</span><span class="badge pending">黄色 · 待核实</span><span class="badge unchecked">灰色 · 未验证</span></div>
 <p class="muted">点击节点查看职责、位置与证据。绿色只覆盖声明的验证范围。</p></header>
@@ -690,7 +716,19 @@ drawButtons();selectNode((data.nodes.find(n=>n.status==='failed')||data.nodes.fi
 </script></body></html>'''
 
 
-def illustrated_breakdown(data, include_overview=False):
+def page_navigation(current, full_review=True, guide=None):
+    pages = ([('reviewer-overview.html', '审阅总览'), ('code-breakdown.html', '代码拆解'),
+              ('report.html', '完整报告')] if full_review else [('code-breakdown.html', '代码拆解')])
+    if guide:
+        pages.append(guide)
+    links = []
+    for href, label in pages:
+        active = ' aria-current="page"' if href == current else ''
+        links.append(f'<a href="{html.escape(href, quote=True)}"{active}>{html.escape(label)}</a>')
+    return '<nav class="page-navigation" aria-label="页面导航">' + ''.join(links) + '</nav>'
+
+
+def illustrated_breakdown(data, include_overview=False, guide=None):
     """Render escaped explanations and current source excerpts; execute nothing."""
     esc = lambda value: html.escape(str(value), quote=True)
     badge = lambda state: f'<span class="badge {state}">{LABELS[state]}</span>'
@@ -741,11 +779,19 @@ def illustrated_breakdown(data, include_overview=False):
                 + paragraph('日志', check.get('log_path', '无运行日志'))
                 + paragraph('日志 SHA-256', check.get('log_sha256', '不适用')) + '</div></details>')
 
-    navigation, content = [], []
+    navigation, content, catalog = [], [], []
     for block in data['blocks']:
         key, state = block['id'], block['status']
         members = [nodes[n] for n in block['node_ids']]
         navigation.append(f'<a href="#{key}"><b>{key}</b> {esc(block["title"])}{badge(state)}</a>')
+        locations = [loc for node in members for loc in node['locations']]
+        position = locations[0] if locations else None
+        source_label = f'{position["path"]}:{position["line"]}' if position else '尚未登记源码位置'
+        catalog.append(f'<a class="catalog-card" href="#{key}" data-block="{key}">'
+                       f'<div class="catalog-card-head"><span class="catalog-icon">{key}</span><div>'
+                       f'<h3>{esc(block["title"])}</h3><small>{len(members)} 个职责节点</small></div></div>'
+                       f'<p>{esc(block["purpose"])}</p>{badge(state)}<div class="catalog-card-foot">'
+                       f'<span>{esc(source_label)}</span><b>查看拆解 ↗</b></div></a>')
         content.append(f'<section class="block {state}" id="{key}"><div class="block-heading">'
                        f'<span class="block-no">{key}</span><h2>{esc(block["title"])}</h2>{badge(state)}</div>'
                        f'<p class="purpose">{esc(block["purpose"])}</p>')
@@ -811,12 +857,17 @@ def illustrated_breakdown(data, include_overview=False):
               'SNAPSHOT': esc(json.dumps(data['snapshot'], ensure_ascii=False, indent=2)),
               'ROOT': esc(data['project_root']),
               'STYLES': (Path(__file__).resolve().parent.parent / 'assets' / 'reviewer-breakdown.css').read_text(encoding='utf-8'),
+              'THEME': report_theme(), 'PREVIEWS': document_previews(data), 'CATALOG': ''.join(catalog),
+              'BLOCKS': str(len(data['blocks'])), 'NODES': str(len(data['nodes'])),
+              'EVIDENCECOUNT': str(len(data['evidence'])),
               'CONTEXT': context_sections(data)[0],
+              'PAGESTYLE': (Path(__file__).resolve().parent.parent / 'assets' / 'page-navigation.css').read_text(encoding='utf-8'),
+              'PAGENAV': page_navigation('code-breakdown.html', include_overview, guide),
               'OVERVIEWLINK': '<p><a class="overview-link" href="reviewer-overview.html">打开审阅总览：先看懂，再决定</a></p>' if include_overview else ''}
     return re.sub(r'@@([A-Z]+)@@', lambda match: values[match.group(1)], template)
 
 
-def render(record, record_dir, out_dir, breakdown_only=False):
+def render(record, record_dir, out_dir, breakdown_only=False, guide_page=None, guide_label='返回专题图解'):
     data = assess(record, record_dir)
     out = Path(out_dir).resolve()
     paths = {'breakdown': out / 'code-breakdown.md',
@@ -829,9 +880,21 @@ def render(record, record_dir, out_dir, breakdown_only=False):
     protected = {project_path(root, f['path']) for f in data['snapshot']['files']}
     protected.update(project_path(root, e['log_path']) for e in data['evidence'] if e['kind'] == 'runtime')
     need(not any(p.resolve() in protected for p in paths.values()), 'Output would overwrite reviewed source or evidence')
+    guide = None
+    if guide_page is not None:
+        guide_path = Path(guide_page).resolve()
+        need(guide_path.is_file() and guide_path.suffix.lower() == '.html', 'guide_page must be an existing HTML file')
+        need(guide_path not in paths.values(), 'Output would overwrite guide_page')
+        need(isinstance(guide_label, str) and bool(guide_label.strip()), 'guide_label must be nonempty text')
+        guide = (quote(Path(os.path.relpath(guide_path, out)).as_posix(), safe='/'), guide_label)
+    page_style = (Path(__file__).resolve().parent.parent / 'assets' / 'page-navigation.css').read_text(encoding='utf-8')
     payload = json.dumps(data, ensure_ascii=False).replace('<', '\\u003c').replace('>', '\\u003e').replace('&', '\\u0026')
-    document = HTML_TEMPLATE.replace('@@TITLE@@', html.escape(data['title'])).replace('@@SVG@@', graph_svg(data)).replace('@@DATA@@', payload)
-    breakdown_document = illustrated_breakdown(data, include_overview=not breakdown_only)
+    report_values = {'TITLE': html.escape(data['title']), 'SVG': graph_svg(data), 'DATA': payload,
+                     'THEME': report_theme(),
+                     'REPORTSTYLE': (Path(__file__).resolve().parent.parent / 'assets' / 'reviewer-report.css').read_text(encoding='utf-8'),
+                     'PAGESTYLE': page_style, 'PAGENAV': page_navigation('report.html', True, guide)}
+    document = re.sub(r'@@([A-Z]+)@@', lambda match: report_values[match.group(1)], HTML_TEMPLATE)
+    breakdown_document = illustrated_breakdown(data, include_overview=not breakdown_only, guide=guide)
     out.mkdir(parents=True, exist_ok=True)
     paths['breakdown'].write_text(code_breakdown(data), encoding='utf-8')
     paths['breakdown_html'].write_text(breakdown_document, encoding='utf-8')
@@ -845,6 +908,10 @@ def render(record, record_dir, out_dir, breakdown_only=False):
                   'ROOT': html.escape(data['project_root']), 'STATUS': LABELS[data['overall']],
                   'STATUSCLASS': data['overall'],
                   'BLOCKS': str(len(data['blocks'])), 'CONTEXT': context_html,
+                  'THEME': report_theme(), 'PREVIEWS': document_previews(data),
+                  'NODES': str(len(data['nodes'])), 'EVIDENCECOUNT': str(len(data['evidence'])),
+                  'STYLES': (Path(__file__).resolve().parent.parent / 'assets' / 'reviewer-overview.css').read_text(encoding='utf-8'),
+                  'PAGESTYLE': page_style, 'PAGENAV': page_navigation('reviewer-overview.html', True, guide),
                   'BASELINE': html.escape(data['snapshot']['base_revision'])}
         overview_html = re.sub(r'@@([A-Z]+)@@', lambda match: values[match.group(1)], template)
         paths['overview_html'].write_text(overview_html, encoding='utf-8')
@@ -858,13 +925,16 @@ def main():
     parser.add_argument('action', choices=['validate', 'render', 'breakdown'])
     parser.add_argument('record', type=Path)
     parser.add_argument('--out', type=Path)
+    parser.add_argument('--guide-page', type=Path, help='Existing companion HTML page to link back to')
+    parser.add_argument('--guide-label', default='返回专题图解', help='Companion page navigation label')
     args = parser.parse_args()
     try:
         record = json.loads(args.record.read_text(encoding='utf-8-sig'))
         data = assess(record, args.record.parent)
         if args.action in ('render', 'breakdown'):
             need(args.out is not None, f'{args.action} requires --out')
-            paths = render(record, args.record.parent, args.out, breakdown_only=args.action == 'breakdown')
+            paths = render(record, args.record.parent, args.out, breakdown_only=args.action == 'breakdown',
+                           guide_page=args.guide_page, guide_label=args.guide_label)
             print(json.dumps({k: str(v) for k, v in paths.items()}, ensure_ascii=False))
         print(f'Validated: overall={data["overall"]}; stale_evidence={len(data["stale_evidence"])}')
         return 0

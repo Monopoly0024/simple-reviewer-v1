@@ -7,11 +7,32 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from html.parser import HTMLParser
+from urllib.parse import unquote
 
 SCRIPT = Path(__file__).with_name('reviewer_report.py')
 spec = importlib.util.spec_from_file_location('reviewer_report', SCRIPT)
 reviewer = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(reviewer)
+
+
+class PageNavigation(HTMLParser):
+    def __init__(self, page):
+        super().__init__()
+        self.active = False
+        self.links = []
+        self.feed(page)
+
+    def handle_starttag(self, tag, attrs):
+        attrs = dict(attrs)
+        if tag == 'nav' and attrs.get('aria-label') == '页面导航':
+            self.active = True
+        if self.active and tag == 'a':
+            self.links.append(attrs)
+
+    def handle_endtag(self, tag):
+        if tag == 'nav':
+            self.active = False
 
 
 class ReportTests(unittest.TestCase):
@@ -244,6 +265,46 @@ class ReportTests(unittest.TestCase):
         for value in ('Return value', 'Return 1', 'app.py:1', '已验证通过',
                       'role="button"', 'code-line'):
             self.assertIn(value, page)
+
+    def test_full_reports_have_reciprocal_page_navigation(self):
+        paths = reviewer.render(self.record, self.root, self.root / 'report')
+        pages = ['reviewer-overview.html', 'code-breakdown.html', 'report.html']
+        for key in ('overview_html', 'breakdown_html', 'html'):
+            with self.subTest(page=key):
+                links = PageNavigation(paths[key].read_text(encoding='utf-8')).links
+                self.assertEqual([link['href'] for link in links], pages)
+                self.assertEqual([link['href'] for link in links if link.get('aria-current') == 'page'],
+                                 [paths[key].name])
+
+    def test_breakdown_navigation_does_not_link_to_unwritten_reports(self):
+        paths = reviewer.render(self.record, self.root, self.root / 'map', breakdown_only=True)
+        links = PageNavigation(paths['breakdown_html'].read_text(encoding='utf-8')).links
+        self.assertEqual([link['href'] for link in links], ['code-breakdown.html'])
+
+    def test_guide_return_link_is_explicit_relative_and_escaped(self):
+        guide = self.root / '专题 guide #1.html'
+        guide.write_text('<!doctype html><title>Guide</title>', encoding='utf-8')
+        paths = reviewer.render(self.record, self.root, self.root / 'report',
+                                guide_page=guide, guide_label='<Guide>')
+        for key in ('overview_html', 'breakdown_html', 'html'):
+            page = paths[key].read_text(encoding='utf-8')
+            links = PageNavigation(page).links
+            self.assertEqual(len(links), 4)
+            self.assertIn('%23', links[-1]['href'])
+            self.assertEqual((paths[key].parent / unquote(links[-1]['href'])).resolve(), guide.resolve())
+            self.assertIn('&lt;Guide&gt;', page)
+
+    def test_missing_or_overwritten_guide_is_rejected_before_writing(self):
+        out = self.root / 'report'
+        with self.assertRaisesRegex(ValueError, 'guide'):
+            reviewer.render(self.record, self.root, out, guide_page=self.root / 'missing.html')
+        self.assertFalse(out.exists())
+        out.mkdir()
+        guide = out / 'report.html'
+        guide.write_text('Keep original guide', encoding='utf-8')
+        with self.assertRaisesRegex(ValueError, 'overwrite'):
+            reviewer.render(self.record, self.root, out, guide_page=guide)
+        self.assertEqual(guide.read_text(encoding='utf-8'), 'Keep original guide')
 
     def test_breakdown_html_escapes_source_and_record_text(self):
         source = self.root / 'app.py'

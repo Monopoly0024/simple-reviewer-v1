@@ -2,25 +2,30 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; font-src data:">
 <title>@@TITLE@@ · 代码图文拆解</title>
 <style>
 @@STYLES@@
+@@THEME@@
+@@PAGESTYLE@@
 </style>
 </head>
 <body>
+@@PAGENAV@@
 <a class="skip" href="#content">跳到正文</a>
-<aside class="sidebar"><div class="brand">Simple Reviewer<small>简单的审阅者 · 1.2.0</small></div>
-<nav aria-label="板块导航"><a href="#overview"><b>总览</b> · 先看全貌</a>@@NAV@@<a href="#snapshot">快照与范围</a></nav>
-<p class="sidebar-note">按职责理解代码，按证据判断作用。<br>离线单文件 · 无外部资源</p></aside>
+<header class="site-header"><nav class="site-links" aria-label="阅读入口"><a href="#catalog">代码板块</a><a href="#relationships">职责关系</a><a href="#snapshot">源文件快照</a></nav><a class="site-brand" href="#overview">Simple Reviewer</a><div class="site-actions"><span class="site-status">离线审阅 · 1.2.0</span><a class="site-button" href="code-breakdown.md">文字版</a></div></header>
 <main class="main" id="content">
-<header class="topbar"><span>代码拆解 / 图文阅读</span><div class="tools"><button id="toggle-code" aria-pressed="false">展开全部代码</button><button id="filter" aria-pressed="false">仅问题与待验证</button><button id="print">打印 / 保存 PDF</button></div></header>
-<section id="overview"><p class="eyebrow">CODE MAP / 从全貌到代码位置</p><h1>@@TITLE@@</h1>
-<p class="lead">@@JOURNEY@@</p><p>目标验收状态：@@STATUS@@</p>
-@@OVERVIEWLINK@@
-<p class="muted">审查时间：@@DATE@@。静态阅读、教学示意与实际执行证据分别展示；通过只覆盖声明范围。</p>
+<div class="breadcrumbs">Simple Reviewer <span>/</span> <b>代码拆解</b></div>
+<section id="overview" class="page-hero"><div class="hero-copy"><p class="eyebrow">CODEX · VIBE CODING · CODE REVIEW</p><h1>读懂 AI 写的<br>每一块代码。</h1>
+<p>@@TITLE@@</p><p>@@JOURNEY@@</p><div class="hero-actions"><a class="site-button" href="#catalog">浏览全部 @@BLOCKS@@ 个板块</a><a class="site-button secondary" href="#relationships">查看职责流程图</a></div></div>@@PREVIEWS@@</section>
+<div class="hero-facts"><div><small>BLOCKS / 功能板块</small><strong>@@BLOCKS@@ 个板块</strong><p>按职责拆解代码</p></div><div><small>NODES / 职责节点</small><strong>@@NODES@@ 个节点</strong><p>定位输入、输出和源码</p></div><div><small>EVIDENCE / 检查证据</small><strong>@@EVIDENCECOUNT@@ 条记录</strong><p>静态阅读与实际运行分别标注</p></div><div><small>VERDICT / 目标状态</small><strong>@@STATUS@@</strong><p>通过只覆盖已声明范围</p></div></div>
+<section id="catalog" class="catalog-section"><p class="eyebrow">代码板块</p><h2>从职责出发，逐块看懂实现</h2><p>先找你关心的功能，再看源码位置和生效证据。每张卡片连接到下方的完整说明。</p><div class="catalog-toolbar"><input id="block-search" class="catalog-search" type="search" aria-label="搜索代码板块" placeholder="搜索板块、职责或源码位置"><button id="filter" aria-pressed="false">仅问题与待验证</button></div><p id="filter-status" role="status" aria-live="polite">展示所有板块；颜色汇总节点状态，正常子节点保留自己的结论。</p><nav class="block-catalog" aria-label="代码板块目录">@@CATALOG@@</nav></section>
+<aside class="sidebar"><nav aria-label="板块导航"><a href="#overview"><b>总览</b></a>@@NAV@@<a href="#snapshot">快照与范围</a></nav></aside>
+<section id="relationships"><header class="topbar"><span>实际职责与代码位置</span><div class="tools"><button id="toggle-code" aria-pressed="false">展开全部代码</button><button id="print">打印 / 保存 PDF</button></div></header>
+@@OVERVIEWLINK@@<p class="muted">审查时间：@@DATE@@。静态阅读、教学示意与实际执行证据分别展示。</p>
 <div class="legend" aria-label="状态图例"><span class="badge passed">绿色 · 已验证通过</span><span class="badge failed">红色 · 已确认问题</span><span class="badge pending">黄色 · 待核实</span><span class="badge unchecked">灰色 · 未验证</span></div>
 <div class="graph-panel"><h2>实际职责关系图</h2><p class="muted">点击或用 Enter / 空格选择节点，跳到对应代码说明。实线表示已确认关系；虚线含义见边上文字。图可横向、纵向滚动。</p><div class="graph-scroll">@@GRAPH@@</div></div>
-<p id="filter-status" role="status" aria-live="polite">展示所有板块；颜色汇总节点状态，正常子节点保留自己的结论。</p></section>
+</section>
 <details class="review-context"><summary>先看目标、变更、验证与下一步</summary>@@CONTEXT@@</details>
 @@CONTENT@@
 <section class="snapshot" id="snapshot"><h2>快照与范围</h2><p class="source-path">项目位置：@@ROOT@@</p><pre>@@SNAPSHOT@@</pre>
@@ -31,10 +36,11 @@
 <script>
 (()=>{'use strict';
 const toggle=document.getElementById('toggle-code'),filter=document.getElementById('filter');
-const blocks=[...document.querySelectorAll('section.block')];
-function showAll(){blocks.forEach(b=>b.hidden=false);filter.setAttribute('aria-pressed','false');document.getElementById('filter-status').textContent='展示所有板块；颜色汇总节点状态，正常子节点保留自己的结论。';}
+const blocks=[...document.querySelectorAll('section.block')],search=document.getElementById('block-search'),cards=[...document.querySelectorAll('.catalog-card')];
+function applyFilters(){const on=filter.getAttribute('aria-pressed')==='true',term=search.value.trim().toLocaleLowerCase();let count=0;blocks.forEach(b=>{const card=cards.find(c=>c.dataset.block===b.id);const visible=!(on&&b.classList.contains('passed'))&&(!term||card.textContent.toLocaleLowerCase().includes(term));b.hidden=!visible;card.hidden=!visible;if(visible)count++;});document.getElementById('filter-status').textContent=`展示 ${count} / ${blocks.length} 个板块`+(on?' · 仅问题与待验证':'')+(count?'。':'。没有匹配项，请修改搜索条件。');}
+function showAll(){search.value='';filter.setAttribute('aria-pressed','false');applyFilters();}
 toggle.addEventListener('click',()=>{const open=toggle.getAttribute('aria-pressed')!=='true';document.querySelectorAll('details.source').forEach(d=>d.open=open);toggle.setAttribute('aria-pressed',String(open));toggle.textContent=open?'收起全部代码':'展开全部代码';});
-filter.addEventListener('click',()=>{const on=filter.getAttribute('aria-pressed')!=='true';filter.setAttribute('aria-pressed',String(on));blocks.forEach(b=>b.hidden=on&&b.classList.contains('passed'));document.getElementById('filter-status').textContent=on?'仅展示含问题或待验证节点的板块；关系图保留完整连接。':'展示所有板块。';});
+filter.addEventListener('click',()=>{filter.setAttribute('aria-pressed',String(filter.getAttribute('aria-pressed')!=='true'));applyFilters();});search.addEventListener('input',applyFilters);
 function reveal(hash){const target=document.getElementById(hash.slice(1));if(target&&target.closest('section.block')?.hidden)showAll();}
 document.querySelectorAll('a[href^="#"]').forEach(a=>a.addEventListener('click',()=>reveal(a.getAttribute('href'))));
 function go(node){const target=document.getElementById(node.dataset.node);if(!target)return;showAll();location.hash=target.id;target.scrollIntoView();target.setAttribute('tabindex','-1');target.focus({preventScroll:true});document.querySelectorAll('.graph-scroll .node').forEach(n=>n.setAttribute('aria-pressed',String(n===node)));}
