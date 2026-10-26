@@ -24,13 +24,18 @@ COLORS = {'passed': ('#dcfce7', '#15803d', '#14532d'),
           'unchecked': ('#f3f4f6', '#6b7280', '#374151')}
 
 
+def block_theme(key):
+    return ('violet', 'cyan', 'pink', 'blue', 'teal')[(int(key[1:]) - 1) % 5]
+
+
 def report_theme():
     """Embed the licensed font so each report stays usable offline."""
     assets = Path(__file__).resolve().parent.parent / 'assets'
     font = base64.b64encode((assets / 'fonts' / 'AlbertSans-VariableFont_wght.woff2').read_bytes()).decode('ascii')
     face = ('@font-face{font-family:"Albert Sans";font-style:normal;font-weight:100 900;'
             f'font-display:swap;src:url(data:font/woff2;base64,{font}) format("woff2");}}\n')
-    return face + (assets / 'reviewer-theme.css').read_text(encoding='utf-8')
+    return (face + (assets / 'reviewer-theme.css').read_text(encoding='utf-8')
+            + '\n' + (assets / 'reviewer-accents.css').read_text(encoding='utf-8'))
 
 
 def document_previews(data):
@@ -38,7 +43,7 @@ def document_previews(data):
     cards = []
     for block in data['blocks'][:3]:
         state = block['status']
-        cards.append('<article class="document-card"><div class="document-head"><span>代码职责 / '
+        cards.append(f'<article class="document-card" data-theme="{block_theme(block["id"])}"><div class="document-head"><span>代码职责 / '
                      + html.escape(block['id']) + '</span><b>' + html.escape(block['id'])
                      + '</b></div><div class="document-body"><p><small>block:</small> <mark>'
                      + html.escape(block['title']) + '</mark></p><p><b>作用</b><br>'
@@ -787,12 +792,12 @@ def illustrated_breakdown(data, include_overview=False, guide=None):
         locations = [loc for node in members for loc in node['locations']]
         position = locations[0] if locations else None
         source_label = f'{position["path"]}:{position["line"]}' if position else '尚未登记源码位置'
-        catalog.append(f'<a class="catalog-card" href="#{key}" data-block="{key}">'
+        catalog.append(f'<a class="catalog-card" href="#{key}" data-block="{key}" data-theme="{block_theme(key)}">'
                        f'<div class="catalog-card-head"><span class="catalog-icon">{key}</span><div>'
                        f'<h3>{esc(block["title"])}</h3><small>{len(members)} 个职责节点</small></div></div>'
                        f'<p>{esc(block["purpose"])}</p>{badge(state)}<div class="catalog-card-foot">'
                        f'<span>{esc(source_label)}</span><b>查看拆解 ↗</b></div></a>')
-        content.append(f'<section class="block {state}" id="{key}"><div class="block-heading">'
+        content.append(f'<section class="block {state}" id="{key}" data-theme="{block_theme(key)}"><div class="block-heading">'
                        f'<span class="block-no">{key}</span><h2>{esc(block["title"])}</h2>{badge(state)}</div>'
                        f'<p class="purpose">{esc(block["purpose"])}</p>')
         explanation = block.get('explanation', {})

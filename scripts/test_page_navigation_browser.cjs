@@ -51,7 +51,8 @@ const {chromium} = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
         assert.ok(navBox && navBox.y >= 0 && navBox.y + navBox.height <= 901, 'Navigation stays in viewport');
         await nav.locator('a').first().focus();
         assert.ok(await nav.isVisible());
-        assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+        assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false,
+          'Overflow in ' + path.basename(source) + ' at width ' + width);
         await page.evaluate(() => scrollTo(0, 0));
         await page.screenshot({path: path.join(out, `${path.basename(source, '.html')}-${width}.png`)});
       }

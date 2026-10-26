@@ -20,6 +20,34 @@ const {chromium} = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
     await page.goto(pathToFileURL(html).href);
     const total = await page.locator('section.block').count();
     assert.ok(total > 0);
+    const palette = {violet: ['rgb(250, 248, 255)', 'rgb(73, 53, 138)'],
+      cyan: ['rgb(244, 252, 254)', 'rgb(21, 93, 110)'],
+      pink: ['rgb(255, 247, 252)', 'rgb(128, 55, 101)'],
+      blue: ['rgb(247, 249, 255)', 'rgb(53, 78, 140)'],
+      teal: ['rgb(244, 251, 249)', 'rgb(32, 93, 88)']};
+    const themed = await page.locator('section.block[data-theme]').evaluateAll(blocks => blocks.map(block => {
+      const heading = block.querySelector('.block-heading h2');
+      const badge = block.querySelector('.badge');
+      return {id: block.id, theme: block.dataset.theme,
+        background: getComputedStyle(block).backgroundColor,
+        headingColor: getComputedStyle(heading).color,
+        badgeClass: badge && badge.className};
+    }));
+    assert.equal(themed.length, total, 'Every block should have a topic theme');
+    for (const block of themed) {
+      assert.ok(palette[block.theme], 'Unknown theme on ' + block.id);
+      assert.equal(block.background, palette[block.theme][0], 'Block tint missing on ' + block.id);
+      assert.equal(block.headingColor, palette[block.theme][1], 'Heading accent missing on ' + block.id);
+      assert.match(block.badgeClass || '', /badge (passed|failed|pending|unchecked)/,
+        'Verification state should remain independently labeled on ' + block.id);
+    }
+    const catalogThemes = await page.locator('.catalog-card[data-theme]').evaluateAll(cards =>
+      cards.map(card => ({id: card.getAttribute('href').slice(1), theme: card.dataset.theme})));
+    assert.equal(catalogThemes.length, total, 'Every block should have a themed catalog card');
+    for (const card of catalogThemes) {
+      assert.equal(card.theme, themed.find(block => block.id === card.id).theme,
+        'Catalog and detail theme should match for ' + card.id);
+    }
     assert.equal(await page.locator('.reading-flow').count(), total);
     const sourceCount = await page.locator('details.source').count();
     assert.ok(sourceCount > 0);
@@ -47,8 +75,10 @@ const {chromium} = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
     if (artifacts) {
       await page.evaluate(() => scrollTo(0, 0));
       await page.screenshot({path: path.join(artifacts, 'desktop.png')});
+      await page.locator('#B2').evaluate(block => scrollTo(0, block.getBoundingClientRect().top + scrollY - 80));
+      await page.screenshot({path: path.join(artifacts, 'desktop-block.png')});
     }
-    const widths = [390, 700, 1024];
+    const widths = [320, 390, 700, 1024];
     for (const width of widths) {
       await page.setViewportSize({width, height: 844});
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false,
@@ -56,12 +86,15 @@ const {chromium} = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
     }
     if (artifacts) {
       await page.setViewportSize({width: 390, height: 844});
+      await page.locator('#B2').evaluate(block => scrollTo(0, block.getBoundingClientRect().top + scrollY - 80));
+      await page.screenshot({path: path.join(artifacts, 'mobile-block.png')});
       await page.evaluate(() => scrollTo(0, 0));
       await page.screenshot({path: path.join(artifacts, 'mobile.png')});
     }
     assert.deepEqual(errors, []);
     assert.deepEqual(external, []);
-    const result = {blocks: total, sourceCount, widths, keyboardNavigation: true,
+    const result = {blocks: total, sourceCount, themeAssignments: themed, catalogThemes,
+      topicAndVerificationColorsIndependent: true, widths, keyboardNavigation: true,
       filter: true, externalRequests: external, pageErrors: errors};
     if (artifacts) fs.writeFileSync(path.join(artifacts, 'browser-check.json'), JSON.stringify(result, null, 2));
     console.log(JSON.stringify(result));
