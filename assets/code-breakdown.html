@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; font-src data:">
-<title>@@TITLE@@ · 代码图文拆解</title>
+<title>@@PROJECTTITLE@@ · 代码图文拆解</title>
 <style>
 @@STYLES@@
 @@THEME@@
@@ -16,9 +16,10 @@
 <header class="site-header"><nav class="site-links" aria-label="阅读入口"><a href="#catalog">代码板块</a><a href="#relationships">职责关系</a><a href="#snapshot">源文件快照</a></nav><a class="site-brand" href="#overview">Simple Reviewer</a><div class="site-actions"><span class="site-status">离线审阅 · 1.2.0</span><a class="site-button" href="code-breakdown.md">文字版</a></div></header>
 <main class="main" id="content">
 <div class="breadcrumbs">Simple Reviewer <span>/</span> <b>代码拆解</b></div>
-<section id="overview" class="page-hero"><div class="hero-copy"><p class="eyebrow">CODEX · VIBE CODING · CODE REVIEW</p><h1>读懂 AI 写的<br>每一块代码。</h1>
-<p>@@TITLE@@</p><p>@@JOURNEY@@</p><div class="hero-actions"><a class="site-button" href="#catalog">浏览全部 @@BLOCKS@@ 个板块</a><a class="site-button secondary" href="#relationships">查看职责流程图</a></div></div>@@PREVIEWS@@</section>
+<section id="overview" class="page-hero"><div class="hero-copy"><p class="eyebrow">代码拆解 · @@PAGEFOCUS@@</p><h1>@@PROJECTTITLE@@<span class="hero-focus">@@PAGEFOCUS@@</span></h1>
+<p class="project-description">@@PROJECTDESCRIPTION@@</p><p class="review-scope">@@JOURNEY@@</p><div class="hero-actions"><a class="site-button" href="#catalog">浏览全部 @@BLOCKS@@ 个板块</a><a class="site-button secondary" href="#relationships">查看职责流程图</a></div></div>@@PREVIEWS@@</section>
 <div class="hero-facts"><div><small>BLOCKS / 功能板块</small><strong>@@BLOCKS@@ 个板块</strong><p>按职责拆解代码</p></div><div><small>NODES / 职责节点</small><strong>@@NODES@@ 个节点</strong><p>定位输入、输出和源码</p></div><div><small>EVIDENCE / 检查证据</small><strong>@@EVIDENCECOUNT@@ 条记录</strong><p>静态阅读与实际运行分别标注</p></div><div><small>VERDICT / 目标状态</small><strong>@@STATUS@@</strong><p>通过只覆盖已声明范围</p></div></div>
+@@READINGGUIDE@@
 <section id="catalog" class="catalog-section"><p class="eyebrow">代码板块</p><h2>从职责出发，逐块看懂实现</h2><p>先找你关心的功能，再看源码位置和生效证据。每张卡片连接到下方的完整说明。</p><p class="theme-note">并列卡片保持同一种样式；白、绿、浅绿表示输入、处理、输出的递进。验证结论以带文字的红、黄、绿、灰标签为准。</p><div class="catalog-toolbar"><input id="block-search" class="catalog-search" type="search" aria-label="搜索代码板块" placeholder="搜索板块、职责或源码位置"><button id="filter" aria-pressed="false">仅问题与待验证</button></div><p id="filter-status" role="status" aria-live="polite">展示所有板块；状态标签汇总节点结论，正常子节点保留自己的结论。</p><nav class="block-catalog" aria-label="代码板块目录">@@CATALOG@@</nav></section>
 <aside class="sidebar"><nav aria-label="板块导航"><a href="#overview"><b>总览</b></a>@@NAV@@<a href="#snapshot">快照与范围</a></nav></aside>
 <section id="relationships"><header class="topbar"><span>实际职责与代码位置</span><div class="tools"><button id="toggle-code" aria-pressed="false">展开全部代码</button><button id="print">打印 / 保存 PDF</button></div></header>

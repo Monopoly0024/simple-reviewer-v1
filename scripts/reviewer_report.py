@@ -31,26 +31,103 @@ def report_theme():
     face = ('@font-face{font-family:"Albert Sans";font-style:normal;font-weight:100 900;'
             f'font-display:swap;src:url(data:font/woff2;base64,{font}) format("woff2");}}\n')
     return (face + (assets / 'reviewer-theme.css').read_text(encoding='utf-8')
-            + '\n' + (assets / 'reviewer-accents.css').read_text(encoding='utf-8'))
+            + '\n' + (assets / 'reviewer-accents.css').read_text(encoding='utf-8')
+            + '\n' + (assets / 'reviewer-compact.css').read_text(encoding='utf-8'))
 
 
-def document_previews(data):
-    """Show real block summaries in the source reference's three-document layout."""
+def term_annotations(data):
+    """Bundle authored glossary notes; never derive meanings from code or execute it."""
+    terms = {'global': data.get('comprehension', {}).get('glossary', []),
+             'blocks': {b['id']: b.get('explanation', {}).get('glossary', []) for b in data['blocks']}}
+    if not terms['global'] and not any(terms['blocks'].values()):
+        return ''
+    payload = json.dumps(terms, ensure_ascii=False).replace('<', '\\u003c').replace('>', '\\u003e').replace('&', '\\u0026')
+    assets = Path(__file__).resolve().parent.parent / 'assets'
+    return ('<style>' + (assets / 'term-annotations.css').read_text(encoding='utf-8') + '</style>'
+            '<script id="term-data" type="application/json">' + payload + '</script><script>'
+            + (assets / 'term-annotations.js').read_text(encoding='utf-8') + '</script>')
+
+
+def validate_glossary(items, label):
+    need(isinstance(items, list), f'{label} must be an array')
+    meanings = {}
+    for item in items:
+        need(isinstance(item, dict), f'{label}: item must be an object')
+        text_fields(item, ('term', 'meaning'), label)
+        aliases = item.get('aliases', [])
+        need(isinstance(aliases, list) and all(isinstance(a, str) and a.strip() for a in aliases),
+             f'{label}: aliases must be an array of nonempty strings')
+        for key in [item['term'], *aliases]:
+            folded = key.lower()
+            need(folded not in meanings or meanings[folded] == item['meaning'],
+                 f'{label}: conflicting meanings for {key}')
+            meanings[folded] = item['meaning']
+
+
+def project_heading(data, page):
+    """Use authored project context; keep old records useful without inventing goals."""
+    presentation = data.get('presentation', {})
+    name = presentation.get('project_title', data['title'])
+    if page == 'overview':
+        description = presentation.get('overview_description', data.get('user_goal', {}).get(
+            'plain_language', '项目包含：' + '、'.join(b['title'] for b in data['blocks'][:6]) + '。'))
+        focus = '项目目标与审阅概况'
+    else:
+        description = presentation.get('breakdown_description', '按实际职责依次查看：'
+                                       + ' → '.join(b['title'] for b in data['blocks'][:6]) + '。')
+        focus = '实现流程与代码位置'
+    esc = lambda value: html.escape(str(value), quote=True)
+    return {'PROJECTTITLE': esc(name), 'PAGEFOCUS': esc(focus), 'PROJECTDESCRIPTION': esc(description)}
+
+
+def document_previews(data, prefix=''):
+    """Show up to six real block cards; keep overflow reachable in the full catalog."""
+    esc = lambda value: html.escape(str(value), quote=True)
     cards = []
-    for block in data['blocks'][:3]:
+    blocks = data['blocks']
+    visible = blocks if len(blocks) <= 6 else blocks[:5]
+    for block in visible:
         state = block['status']
-        cards.append('<article class="document-card"><div class="document-head"><span>代码职责 / '
-                     + html.escape(block['id']) + '</span><b>' + html.escape(block['id'])
-                     + '</b></div><div class="document-body"><p><small>block:</small> <mark>'
-                     + html.escape(block['title']) + '</mark></p><p><b>作用</b><br>'
-                     + html.escape(block['purpose']) + '</p><p><span class="badge ' + state + '">'
-                     + LABELS[state] + '</span></p><p><small>预览来自下方真实板块记录。</small></p></div></article>')
+        cards.append('<article class="document-card"><div class="document-head"><span>功能板块</span><b>'
+                     + esc(block['id']) + '</b></div><div class="document-body"><h3><a href="'
+                     + prefix + '#' + block['id'] + '">' + esc(block['title']) + '</a></h3><p>'
+                     + esc(block.get('explanation', {}).get('plain_language', block['purpose']))
+                     + '</p><span class="badge ' + state + '">' + LABELS[state] + '</span></div></article>')
+    if len(blocks) > 6:
+        cards.append('<article class="document-card preview-overflow"><div class="document-head"><span>完整目录</span>'
+                     '<b>+' + str(len(blocks) - 5) + '</b></div><div class="document-body"><h3><a href="'
+                     + prefix + '#catalog">其余 ' + str(len(blocks) - 5) + ' 个板块</a></h3><p>'
+                     + esc('、'.join(b['title'] for b in blocks[5:8]))
+                     + ('等。' if len(blocks) > 8 else '。')
+                     + '</p><p>全部板块与检查结论仍保留在完整目录和正文中。</p></div></article>')
     return '<div class="document-stack" aria-label="代码板块预览">' + ''.join(cards) + '</div>'
+
+
+def reading_guide(data, prefix=''):
+    """Link plain-language summaries to blocks without inventing explanations."""
+    esc = lambda value: html.escape(str(value), quote=True)
+    routes = ''.join('<li><a href="' + prefix + '#' + block['id'] + '"><b>'
+                     + esc(block['id'] + ' · ' + block['title']) + '</b><span>'
+                     + esc(block.get('explanation', {}).get('plain_language', block['purpose']))
+                     + '</span></a></li>' for block in data['blocks'])
+    return ('<section class="beginner-guide" id="reading-guide" aria-label="白话阅读指南"><h2>第一次看，从这里开始</h2>'
+            '<p>先看每块的“一句话先懂”和小例子，理解它接手什么、交出什么。源码可以稍后再看。</p>'
+            '<ol class="beginner-route">' + routes + '</ol>'
+            '<p><b>状态怎么读：</b>绿色＝有实际运行通过证据（仅限记录范围）；红色＝确认有问题；'
+            '黄色＝还需核实；灰色＝实际效果未验证。白、绿、浅绿面板只帮助看懂步骤。</p>'
+            '<p>“静态阅读”像看菜谱；“实际运行”像照着菜谱做一遍。看懂菜谱，不能保证已经做出了菜。'
+            '小例子和比喻帮助理解，不增加验证证据。</p></section>')
 
 
 def optional_context(data):
     """Validate beginner-facing context without allowing it to alter evidence status."""
     context = {}
+    if 'presentation' in data:
+        presentation = data['presentation']
+        need(isinstance(presentation, dict), 'presentation must be an object')
+        for field in ('project_title', 'overview_description', 'breakdown_description'):
+            if field in presentation:
+                text_fields(presentation, [field], 'presentation')
     goal = data.get('user_goal')
     if 'user_goal' in data:
         need(isinstance(goal, dict), 'user_goal must be an object')
@@ -95,10 +172,7 @@ def optional_context(data):
     if 'comprehension' in data:
         need(isinstance(comprehension, dict), 'comprehension must be an object')
         glossary = comprehension.get('glossary', [])
-        need(isinstance(glossary, list), 'comprehension.glossary must be an array')
-        for index, item in enumerate(glossary, 1):
-            need(isinstance(item, dict), f'comprehension.glossary[{index}] must be an object')
-            text_fields(item, ('term', 'meaning'), f'comprehension.glossary[{index}]')
+        validate_glossary(glossary, 'comprehension.glossary')
         context['comprehension'] = comprehension
     data['context'] = context
     return context
@@ -294,6 +368,19 @@ def assess(record, record_dir):
             need(isinstance(explanation, dict), f'{block["id"]}: explanation must be object')
             if 'summary' in explanation:
                 text_fields(explanation, ['summary'], block['id'])
+            for field in ('plain_language', 'analogy', 'why_needed', 'takeaway'):
+                if field in explanation:
+                    text_fields(explanation, [field], block['id'])
+            if 'highlights' in explanation:
+                highlights = explanation['highlights']
+                need(isinstance(highlights, list) and 1 <= len(highlights) <= 3
+                     and all(isinstance(item, str) and item.strip() for item in highlights),
+                     f'{block["id"]}: highlights must contain 1..3 nonempty texts')
+            if 'flow' in explanation:
+                need(isinstance(explanation['flow'], dict), f'{block["id"]}: flow must be object')
+                text_fields(explanation['flow'], ['input', 'process', 'output'], block['id'])
+            if 'glossary' in explanation:
+                validate_glossary(explanation['glossary'], block['id'] + '.glossary')
             if 'steps' in explanation:
                 steps = explanation['steps']
                 need(isinstance(steps, list) and 1 <= len(steps) <= 12,
@@ -505,6 +592,26 @@ def code_breakdown(data):
         members = [node_index[key] for key in block['node_ids']]
         lines += ['', f'## {block["id"]} {block["title"]}', '',
                   f'板块职责：{block["purpose"]}', '', f'作用是否生效：**{effect[block["status"]]}**。', '']
+        explanation = block.get('explanation', {})
+        for field, label in (('plain_language', '一句话先懂'), ('analogy', '打个比方（帮助理解）'),
+                             ('why_needed', '为什么需要它'), ('takeaway', '读完记住这一句')):
+            if explanation.get(field):
+                lines += [f'{label}：{explanation[field]}', '']
+        if explanation.get('summary'):
+            lines += ['实现补充：' + explanation['summary'], '']
+        if explanation.get('flow'):
+            flow = explanation['flow']
+            lines += ['拿到什么 → 做什么 → 交出什么：' + ' → '.join(flow[k] for k in ('input', 'process', 'output')), '']
+        for index, step in enumerate(explanation.get('steps', []), 1):
+            lines += [f'{index}. {step["title"]}：{step["detail"]}']
+        if explanation.get('example'):
+            example = explanation['example']
+            lines += ['', '小例子（不作为运行证据）：', '', '输入：' + example['input'], '',
+                      '应有结果：' + example['expected'], '', '例子边界：' + example['note'], '']
+        for item in explanation.get('glossary', []):
+            lines += [f'- {item["term"]}：{item["meaning"]}']
+        if explanation.get('highlights'):
+            lines += ['', '本块重点：', *['- **' + item + '**' for item in explanation['highlights']], '']
         boundary = [edge for edge in data['edges']
                     if (edge['source'] in block['node_ids']) != (edge['target'] in block['node_ids'])]
         if boundary:
@@ -791,23 +898,36 @@ def illustrated_breakdown(data, include_overview=False, guide=None):
         locations = [loc for node in members for loc in node['locations']]
         position = locations[0] if locations else None
         source_label = f'{position["path"]}:{position["line"]}' if position else '尚未登记源码位置'
+        explanation = block.get('explanation', {})
         catalog.append(f'<a class="catalog-card" href="#{key}" data-block="{key}">'
                        f'<div class="catalog-card-head"><span class="catalog-icon">{key}</span><div>'
                        f'<h3>{esc(block["title"])}</h3><small>{len(members)} 个职责节点</small></div></div>'
-                       f'<p>{esc(block["purpose"])}</p>{badge(state)}<div class="catalog-card-foot">'
+                       f'<p>{esc(explanation.get("plain_language", block["purpose"]))}</p>{badge(state)}<div class="catalog-card-foot">'
                        f'<span>{esc(source_label)}</span><b>查看拆解 ↗</b></div></a>')
         content.append(f'<section class="block {state}" id="{key}"><div class="block-heading">'
-                       f'<span class="block-no">{key}</span><h2>{esc(block["title"])}</h2>{badge(state)}</div>'
-                       f'<p class="purpose">{esc(block["purpose"])}</p>')
-        explanation = block.get('explanation', {})
-        if explanation.get('summary'):
-            content.append(f'<p>{esc(explanation["summary"])}</p>')
+                       f'<span class="block-no">{key}</span><h2>{esc(block["title"])}</h2>{badge(state)}</div>')
+        if not explanation.get('plain_language'):
+            content.append(f'<p class="purpose">{esc(block["purpose"])}</p>')
+        if explanation.get('plain_language'):
+            content.append('<aside class="plain-intro"><h3>一句话先懂</h3><p>'
+                           + esc(explanation['plain_language']) + '</p></aside>')
+        if explanation.get('highlights'):
+            content.append('<aside class="key-points" aria-label="本块重点"><h3>这块要留意</h3><ul>'
+                           + ''.join('<li><strong>' + esc(item) + '</strong></li>'
+                                     for item in explanation['highlights']) + '</ul></aside>')
+        content.append('<div class="plain-notes">')
+        for field, label in (('analogy', '打个比方（只帮助理解）'), ('why_needed', '为什么需要它')):
+            if explanation.get(field):
+                content.append('<div class="plain-note"><h3>' + label + '</h3><p>'
+                               + esc(explanation[field]) + '</p></div>')
+        content.append('</div>')
+        flow = explanation.get('flow', {})
         content.append('<div class="reading-flow" aria-label="板块输入、职责与输出示意">'
-                       + stage('input', '输入', '；'.join(dict.fromkeys(n['input'] for n in members)))
+                       + stage('input', '拿到什么 / 输入', flow.get('input', '；'.join(dict.fromkeys(n['input'] for n in members))))
                        + '<span class="arrow" aria-hidden="true">→</span>'
-                       + stage('process', '承担职责', block['purpose'])
+                       + stage('process', '做什么 / 承担职责', flow.get('process', block['purpose']))
                        + '<span class="arrow" aria-hidden="true">→</span>'
-                       + stage('output', '输出', '；'.join(dict.fromkeys(n['output'] for n in members))) + '</div>')
+                       + stage('output', '交出什么 / 输出', flow.get('output', '；'.join(dict.fromkeys(n['output'] for n in members)))) + '</div>')
         if explanation.get('steps'):
             content.append('<h3>这块怎样工作</h3><p class="muted">审查者提供的逻辑示意，不代表执行轨迹。</p><ol class="steps">'
                            + ''.join(f'<li><strong>{esc(s["title"])}</strong><p>{esc(s["detail"])}</p></li>'
@@ -818,6 +938,16 @@ def illustrated_breakdown(data, include_overview=False, guide=None):
                            + paragraph('示意输入', example['input'])
                            + paragraph('应有结果', example['expected'])
                            + paragraph('示意边界（不作为运行证据）', example['note']) + '</aside>')
+        if explanation.get('takeaway'):
+            content.append('<p class="takeaway"><b>读完记住这一句：</b>' + esc(explanation['takeaway']) + '</p>')
+        if explanation.get('glossary'):
+            content.append('<details class="local-glossary"><summary>这块的术语，用白话解释</summary><dl>'
+                           + ''.join('<dt>' + esc(item['term']) + '</dt><dd>' + esc(item['meaning']) + '</dd>'
+                                     for item in explanation['glossary']) + '</dl></details>')
+        if explanation.get('summary'):
+            content.append('<details class="technical-details"><summary>实现补充（技术说明）</summary><p>'
+                           + esc(block['purpose']) + '</p><p>'
+                           + esc(explanation['summary']) + '</p></details>')
         boundary = [e for e in data['edges'] if (e['source'] in block['node_ids']) != (e['target'] in block['node_ids'])]
         if boundary:
             content.append('<h3>与其他板块的关系</h3><ul class="relations">' + ''.join(
@@ -825,9 +955,24 @@ def illustrated_breakdown(data, include_overview=False, guide=None):
                 f' → <a href="#{e["target"]}">{e["target"]} {esc(nodes[e["target"]]["title"])}</a>'
                 f' · {esc(e["kind"])} · {esc(e["label"])}</li>' for e in boundary) + '</ul>')
         for node in members:
+            checks = [evidence[e] for e in node['evidence_ids']]
+            verified = {'passed': '在登记的检查范围内，实际执行结果符合预期；不代表所有场景都通过。',
+                        'failed': '已确认这里有问题。是否会影响本次使用，要看下面记录的触发条件。',
+                        'pending': '还不能确认实际运行效果，需要补充检查或重新验证。',
+                        'unchecked': '这一段的实际运行效果尚未验证。'}[node['status']]
+            basis = ('有关文件或证据已变化，旧结论需要重新检查。' if any(
+                e['id'] in data['stale_evidence'] for e in checks) else
+                '这里只读了源码，或解析了源码结构，没有实际跑通这个功能。' if checks and all(
+                    e['kind'] == 'static' for e in checks) else
+                '已有实际执行记录，具体输入和结果见下方证据；是否通过以状态为准。' if any(
+                    e['kind'] == 'runtime' for e in checks) else '尚未登记支持这一段的检查证据。')
             content.append(f'<article class="node-card {node["status"]}" id="{node["id"]}">'
                            f'<h3>{node["id"]} · {esc(node["title"])} {badge(node["status"])}</h3>'
-                           '<div class="facts">' + paragraph('应有作用', node['expected'])
+                           '<aside class="verification-note"><h4>这里检查到哪一步了？</h4><p>'
+                           + esc(verified) + '</p><p>' + esc(basis) + '</p></aside>'
+                           + paragraph('具体依据与限制', node['reason'])
+                           + '<details class="technical-details"><summary>查看实现、输入输出与验收细节</summary>'
+                           + '<div class="facts">' + paragraph('应有作用', node['expected'])
                            + paragraph('实际实现', node['actual'])
                            + paragraph('节点输入', node['input']) + paragraph('节点输出', node['output'])
                            + paragraph('这块实际起效了吗？', node['reason'])
@@ -837,6 +982,7 @@ def illustrated_breakdown(data, include_overview=False, guide=None):
             for req in (r for r in data['requirements'] if r['id'] in node['requirement_ids']):
                 content.append(paragraph(f'对应需求 {req["id"]} · {req["status"]}',
                                          req['text'] + '；验收：' + req['acceptance']))
+            content.append('</details>')
             for issue in (issues[i] for i in node['issue_ids']):
                 issue_state = 'pending' if issue['stale'] or issue['status'] == 'suspected' else 'failed'
                 content.append(f'<aside class="issue {issue_state}"><h4>{issue["id"]} · {esc(issue["title"])}</h4>'
@@ -854,7 +1000,7 @@ def illustrated_breakdown(data, include_overview=False, guide=None):
             content.append('</article>')
         content.append('</section>')
     template = (Path(__file__).resolve().parent.parent / 'assets' / 'code-breakdown.html').read_text(encoding='utf-8')
-    values = {'TITLE': esc(data['title']), 'DATE': esc(data['reviewed_at']),
+    values = {**project_heading(data, 'breakdown'), 'TITLE': esc(data['title']), 'DATE': esc(data['reviewed_at']),
               'NAV': ''.join(navigation), 'CONTENT': ''.join(content), 'GRAPH': graph_svg(data),
               'JOURNEY': esc(data.get('journey_note', data['block_grouping'])),
               'STATUS': badge(data['overall']),
@@ -862,13 +1008,15 @@ def illustrated_breakdown(data, include_overview=False, guide=None):
               'ROOT': esc(data['project_root']),
               'STYLES': (Path(__file__).resolve().parent.parent / 'assets' / 'reviewer-breakdown.css').read_text(encoding='utf-8'),
               'THEME': report_theme(), 'PREVIEWS': document_previews(data), 'CATALOG': ''.join(catalog),
+              'READINGGUIDE': reading_guide(data),
               'BLOCKS': str(len(data['blocks'])), 'NODES': str(len(data['nodes'])),
               'EVIDENCECOUNT': str(len(data['evidence'])),
               'CONTEXT': context_sections(data)[0],
               'PAGESTYLE': (Path(__file__).resolve().parent.parent / 'assets' / 'page-navigation.css').read_text(encoding='utf-8'),
               'PAGENAV': page_navigation('code-breakdown.html', include_overview, guide),
               'OVERVIEWLINK': '<p><a class="overview-link" href="reviewer-overview.html">打开审阅总览：先看懂，再决定</a></p>' if include_overview else ''}
-    return re.sub(r'@@([A-Z]+)@@', lambda match: values[match.group(1)], template)
+    document = re.sub(r'@@([A-Z]+)@@', lambda match: values[match.group(1)], template)
+    return document.replace('</body>', term_annotations(data) + '</body>')
 
 
 def render(record, record_dir, out_dir, breakdown_only=False, guide_page=None, guide_label='返回专题图解'):
@@ -904,21 +1052,22 @@ def render(record, record_dir, out_dir, breakdown_only=False, guide_page=None, g
     paths['breakdown_html'].write_text(breakdown_document, encoding='utf-8')
     if not breakdown_only:
         paths['markdown'].write_text(markdown(data), encoding='utf-8')
-        paths['html'].write_text(document, encoding='utf-8')
+        paths['html'].write_text(document.replace('</body>', term_annotations(data) + '</body>'), encoding='utf-8')
         paths['record'].write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
         context_html, context_md = context_sections(data)
         template = (Path(__file__).resolve().parent.parent / 'assets' / 'reviewer-overview.html').read_text(encoding='utf-8')
-        values = {'TITLE': html.escape(data['title']), 'DATE': html.escape(data['reviewed_at']),
+        values = {**project_heading(data, 'overview'), 'TITLE': html.escape(data['title']), 'DATE': html.escape(data['reviewed_at']),
                   'ROOT': html.escape(data['project_root']), 'STATUS': LABELS[data['overall']],
                   'STATUSCLASS': data['overall'],
                   'BLOCKS': str(len(data['blocks'])), 'CONTEXT': context_html,
-                  'THEME': report_theme(), 'PREVIEWS': document_previews(data),
+                  'THEME': report_theme(), 'PREVIEWS': document_previews(data, 'code-breakdown.html'),
+                  'READINGGUIDE': reading_guide(data, 'code-breakdown.html'),
                   'NODES': str(len(data['nodes'])), 'EVIDENCECOUNT': str(len(data['evidence'])),
                   'STYLES': (Path(__file__).resolve().parent.parent / 'assets' / 'reviewer-overview.css').read_text(encoding='utf-8'),
                   'PAGESTYLE': page_style, 'PAGENAV': page_navigation('reviewer-overview.html', True, guide),
                   'BASELINE': html.escape(data['snapshot']['base_revision'])}
         overview_html = re.sub(r'@@([A-Z]+)@@', lambda match: values[match.group(1)], template)
-        paths['overview_html'].write_text(overview_html, encoding='utf-8')
+        paths['overview_html'].write_text(overview_html.replace('</body>', term_annotations(data) + '</body>'), encoding='utf-8')
         paths['overview'].write_text(f'# {data["title"]} · 审阅总览\n\n目标状态：{LABELS[data["overall"]]}\n\n'
                                     + context_md + '\n[查看代码拆解](code-breakdown.md)\n', encoding='utf-8')
     return paths

@@ -2,7 +2,7 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const {pathToFileURL} = require('node:url');
+const {pathToFileURL, fileURLToPath} = require('node:url');
 const {chromium} = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 
 (async () => {
@@ -19,6 +19,9 @@ const {chromium} = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
     await page.emulateMedia({reducedMotion: 'reduce'});
     await page.goto(pathToFileURL(html).href);
     const record = JSON.parse(fs.readFileSync(path.join(path.dirname(html), 'review.effective.json'), 'utf8'));
+    const projectTitle = record.presentation?.project_title || record.title;
+    assert.ok((await page.locator('h1').innerText()).includes(projectTitle));
+    assert.equal(await page.locator('.document-card').count(), Math.min(record.blocks.length, 6));
     assert.equal(await page.locator('.metric .verdict').getAttribute('class'), 'verdict ' + record.overall);
     for (const req of record.requirements) {
       const card = page.locator('.acceptance').filter({has: page.locator('h3', {hasText: req.id + ' · '})});
@@ -38,12 +41,24 @@ const {chromium} = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
       await details.locator('summary').click();
     }
     for (const anchor of await page.locator('a[href]:not([href^="#"])').evaluateAll(as => as.map(a => a.getAttribute('href')))) {
-      assert.ok(fs.existsSync(path.resolve(path.dirname(html), anchor)), 'Broken local link ' + anchor);
+      const target = new URL(anchor, pathToFileURL(html));
+      assert.ok(fs.existsSync(fileURLToPath(target)), 'Broken local link ' + anchor);
+    }
+    const readingLinks = await page.locator('.beginner-route a').evaluateAll(as => as.map(a => a.href));
+    assert.equal(readingLinks.length, record.blocks.length);
+    for (const link of readingLinks) {
+      const anchor = page.locator('.beginner-route a').filter({hasText: new URL(link).hash.slice(1) + ' ·'});
+      await anchor.click();
+      const id = new URL(link).hash;
+      assert.equal(await page.evaluate(() => location.hash), id);
+      assert.ok(await page.locator(id).isVisible());
+      await page.goBack();
     }
     await page.evaluate(() => scrollTo(0, 0));
     await page.screenshot({path: path.join(artifacts, 'desktop.png')});
     for (const width of [320, 390, 700, 1024, 1800]) {
       await page.setViewportSize({width, height: 900});
+      assert.equal(await page.locator('.document-card:visible').count(), Math.min(record.blocks.length, 6));
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, 'Overflow ' + width);
     }
     await page.setViewportSize({width: 390, height: 844});

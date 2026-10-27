@@ -52,6 +52,7 @@ jobs:
       - run: python -B scripts/reviewer_report.py render assets/review.example.json --out review-output
       - run: node scripts/test_breakdown_browser.cjs review-output/code-breakdown.html review-output/browser
       - run: node scripts/test_overview_browser.cjs review-output/reviewer-overview.html review-output/overview-browser
+      - run: node scripts/test_terms_browser.cjs review-output/reviewer-overview.html review-output/code-breakdown.html review-output/report.html
       - run: node scripts/test_page_navigation_browser.cjs
       - run: node scripts/test_workflow_browser.cjs
       - uses: actions/upload-artifact@v4

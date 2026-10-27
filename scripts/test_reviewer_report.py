@@ -71,6 +71,78 @@ class ReportTests(unittest.TestCase):
     def test_valid_runtime_evidence_passes(self):
         self.assertEqual(self.assess()['overall'], 'passed')
 
+    def test_inline_terms_escape_script_payload_and_keep_verdict(self):
+        self.record['comprehension'] = {'glossary': [{'term': 'CSV', 'aliases': ['csv转换'],
+            'meaning': '</script><img src=x onerror=alert(1)> & explanation'}]}
+        paths = reviewer.render(self.record, self.root, self.root / 'terms')
+        for key in ['overview_html', 'breakdown_html', 'html']:
+            page = paths[key].read_text(encoding='utf-8')
+            self.assertIn('id="term-data"', page)
+            self.assertIn('\\u003c/script\\u003e', page)
+            self.assertNotIn('</script><img src=x', page)
+            self.assertIn('script-src', page)
+        self.assertEqual(self.assess()['overall'], 'passed')
+
+    def test_inline_term_aliases_and_conflicts_are_validated(self):
+        for aliases in ['CSV', [None], [''], ['   ']]:
+            self.record['comprehension'] = {'glossary': [{'term': 'CSV', 'meaning': 'table', 'aliases': aliases}]}
+            with self.subTest(aliases=aliases), self.assertRaisesRegex(ValueError, 'aliases'):
+                self.assess()
+        self.record['comprehension'] = {'glossary': [
+            {'term': 'CSV', 'meaning': 'one'}, {'term': 'csv', 'meaning': 'different'}]}
+        with self.assertRaisesRegex(ValueError, 'conflicting meanings'):
+            self.assess()
+
+    def test_records_without_terms_do_not_require_script(self):
+        data = self.assess()
+        self.assertEqual(reviewer.term_annotations(data), '')
+
+    def test_project_headers_distinguish_goals_from_implementation_and_escape_text(self):
+        self.record['presentation'] = {'project_title': 'Fund <forecast>',
+            'overview_description': 'Estimate future amounts <safely>',
+            'breakdown_description': 'Prepare data, train, and inspect results'}
+        paths = reviewer.render(self.record, self.root, self.root / 'project-headers')
+        overview = paths['overview_html'].read_text(encoding='utf-8')
+        breakdown = paths['breakdown_html'].read_text(encoding='utf-8')
+        self.assertIn('<h1>Fund &lt;forecast&gt;', overview)
+        self.assertIn('<h1>Fund &lt;forecast&gt;', breakdown)
+        self.assertIn('项目目标与审阅概况', overview)
+        self.assertIn('实现流程与代码位置', breakdown)
+        self.assertIn('Estimate future amounts &lt;safely&gt;', overview)
+        self.assertIn('Prepare data, train, and inspect results', breakdown)
+        self.assertNotIn('<forecast>', overview)
+        self.assertNotIn('读懂 AI 写的', breakdown)
+        self.assertEqual(self.assess()['overall'], 'passed')
+
+    def test_old_records_use_project_record_title_in_page_header(self):
+        paths = reviewer.render(self.record, self.root, self.root / 'old-header')
+        for key in ('overview_html', 'breakdown_html'):
+            self.assertIn('<h1>Review', paths[key].read_text(encoding='utf-8'))
+
+    def test_invalid_presentation_is_rejected(self):
+        for invalid in ([], {'project_title': ''}, {'overview_description': 8},
+                        {'breakdown_description': ['unexpected']}):
+            with self.subTest(presentation=invalid):
+                self.record['presentation'] = invalid
+                with self.assertRaises(ValueError):
+                    self.assess()
+
+    def test_preview_card_count_follows_blocks_and_keeps_overflow_reachable(self):
+        for count in (1, 2, 3, 5, 6, 7, 10):
+            with self.subTest(block_count=count):
+                data = {'blocks': [{'id': f'B{i}', 'title': f'Part {i}', 'purpose': f'Purpose {i}',
+                                    'status': 'unchecked'} for i in range(1, count + 1)]}
+                page = reviewer.document_previews(data, 'code-breakdown.html')
+                self.assertEqual(page.count('class="document-card'), min(count, 6))
+                self.assertIn('href="code-breakdown.html#B1"', page)
+                if count <= 6:
+                    self.assertIn(f'href="code-breakdown.html#B{count}"', page)
+                    self.assertNotIn('preview-overflow', page)
+                else:
+                    self.assertIn('preview-overflow', page)
+                    self.assertIn('href="code-breakdown.html#catalog"', page)
+                    self.assertIn(f'其余 {count - 5} 个板块', page)
+
     def test_context_overview_has_effective_acceptance_and_escaped_text(self):
         self.record['user_goal'] = {'original_request': 'Show <script>alert(1)</script>',
                                     'plain_language': 'Return a value', 'open_questions': []}
@@ -334,6 +406,51 @@ class ReportTests(unittest.TestCase):
             'node_ids': ['N1'], 'explanation': {'steps': '<script>bad()</script>'}}]
         with self.assertRaisesRegex(ValueError, 'steps'):
             self.assess()
+
+    def test_plain_explanations_are_escaped_in_both_pages_and_preserved_in_markdown(self):
+        self.record['blocks'] = [{'id': 'B1', 'title': 'Service', 'purpose': 'Return value',
+            'node_ids': ['N1'], 'explanation': {
+                'plain_language': 'Return <one> value', 'analogy': 'Like a sealed envelope',
+                'why_needed': 'The caller needs an answer', 'takeaway': 'Return one result',
+                'flow': {'input': 'Question', 'process': 'Read the value', 'output': 'Answer'},
+                'glossary': [{'term': '<value>', 'meaning': 'A result'}],
+                'example': {'input': 'No arguments', 'expected': '1', 'note': 'Illustration only'}}}]
+        before = self.assess()['overall']
+        paths = reviewer.render(self.record, self.root, self.root / 'plain')
+        page = paths['breakdown_html'].read_text(encoding='utf-8')
+        overview = paths['overview_html'].read_text(encoding='utf-8')
+        text = paths['breakdown'].read_text(encoding='utf-8')
+        self.assertIn('一句话先懂', page)
+        self.assertIn('Return &lt;one&gt; value', page)
+        self.assertIn('Return &lt;one&gt; value', overview)
+        self.assertIn('href="code-breakdown.html#B1"', overview)
+        self.assertIn('Return <one> value', text)
+        self.assertIn('Illustration only', text)
+        self.assertIn('&lt;value&gt;', page)
+        self.assertNotIn('<value>', page)
+        self.assertIn('<details class="technical-details">', page)
+        self.assertNotIn('<details class="technical-details" open', page)
+        self.assertEqual(self.assess()['overall'], before)
+
+    def test_invalid_plain_explanations_are_rejected(self):
+        for invalid in ({'plain_language': 1}, {'flow': {'input': 'Only one field'}},
+                        {'glossary': [{'term': 'Missing meaning'}]}, {'glossary': [False]},
+                        {'highlights': []}, {'highlights': [1]}, {'highlights': ['a'] * 4}):
+            with self.subTest(explanation=invalid):
+                self.record['blocks'] = [{'id': 'B1', 'title': 'Service', 'purpose': 'Return',
+                                         'node_ids': ['N1'], 'explanation': invalid}]
+                with self.assertRaises(ValueError):
+                    self.assess()
+
+    def test_highlights_are_escaped_and_do_not_change_verification(self):
+        self.record['blocks'] = [{'id': 'B1', 'title': 'Service', 'purpose': 'Return',
+            'node_ids': ['N1'], 'explanation': {'highlights': ['Only <one> return value']}}]
+        paths = reviewer.render(self.record, self.root, self.root / 'highlight')
+        page = paths['breakdown_html'].read_text(encoding='utf-8')
+        self.assertIn('<strong>Only &lt;one&gt; return value</strong>', page)
+        self.assertNotIn('<one>', page)
+        self.assertIn('Only <one> return value', paths['breakdown'].read_text(encoding='utf-8'))
+        self.assertEqual(self.assess()['overall'], 'passed')
 
     def test_source_excerpt_marks_changed_and_invalid_ranges(self):
         (self.root / 'app.py').write_text('def run(): return 2\n', encoding='utf-8')

@@ -20,6 +20,11 @@ const {chromium} = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
     await page.goto(pathToFileURL(html).href);
     const total = await page.locator('section.block').count();
     assert.ok(total > 0);
+    assert.equal(await page.locator('.document-card').count(), Math.min(total, 6));
+    const previewTargets = await page.locator('.document-card h3 a').evaluateAll(as => as.map(a => a.hash));
+    for (const hash of previewTargets) {
+      assert.equal(await page.locator(hash).count(), 1, 'Preview must lead to real content');
+    }
     const themed = await page.locator('section.block').evaluateAll(blocks => blocks.map(block => {
       const heading = block.querySelector('.block-heading h2');
       const badge = block.querySelector('.badge');
@@ -56,6 +61,27 @@ const {chromium} = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
     }));
     assert.deepEqual(clippedTitles, [], 'Graph text should fit inside nodes');
     assert.equal(await page.locator('.reading-flow').count(), total);
+    assert.equal(await page.getByRole('region', {name: '白话阅读指南'}).count(), 1);
+    const emphasis = await page.locator('.plain-intro p, .key-points strong').evaluateAll(elements =>
+      elements.map(el => ({size: parseFloat(getComputedStyle(el).fontSize),
+        weight: parseInt(getComputedStyle(el).fontWeight, 10)})));
+    assert.ok(emphasis.every(style => style.size >= 20 && style.weight >= 600),
+      'Plain summaries and important points should be larger and bolder');
+    const glossary = page.locator('.local-glossary').first();
+    if (await glossary.count()) {
+      assert.equal(await glossary.evaluate(el => el.open), false);
+      await glossary.locator('summary').focus();
+      await page.keyboard.press('Enter');
+      assert.equal(await glossary.evaluate(el => el.open), true);
+      await glossary.locator('summary').click();
+    }
+    const technical = page.locator('details.technical-details');
+    assert.equal(await page.locator('details.technical-details[open]').count(), 0);
+    if (await technical.count()) {
+      await technical.first().locator('summary').click();
+      assert.equal(await technical.first().evaluate(el => el.open), true);
+      await technical.first().locator('summary').click();
+    }
     const sourceCount = await page.locator('details.source').count();
     assert.ok(sourceCount > 0);
     await page.locator('#toggle-code').click();
@@ -88,6 +114,8 @@ const {chromium} = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
     const widths = [320, 390, 700, 1024];
     for (const width of widths) {
       await page.setViewportSize({width, height: 844});
+      assert.equal(await page.locator('.document-card:visible').count(), Math.min(total, 6),
+        'All preview cards remain available on phones');
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false,
         'Page overflow at width ' + width);
     }
@@ -101,6 +129,7 @@ const {chromium} = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
     assert.deepEqual(errors, []);
     assert.deepEqual(external, []);
     const result = {blocks: total, sourceCount, semanticContrast: true, parallelCardsUniform: true,
+      dynamicPreviewCards: true, importantTextEmphasized: true,
       verificationLabelsPreserved: true, graphTextFits: true, widths, keyboardNavigation: true,
       filter: true, externalRequests: external, pageErrors: errors};
     if (artifacts) fs.writeFileSync(path.join(artifacts, 'browser-check.json'), JSON.stringify(result, null, 2));

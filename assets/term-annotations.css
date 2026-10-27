@@ -1,0 +1,28 @@
+.term-trigger {
+  appearance:none; display:inline; border:0; border-radius:0; padding:0 0 1px;
+  margin:0; background:transparent; color:inherit; font:inherit; line-height:inherit;
+  text-align:inherit; border-bottom:2px solid #548d35; cursor:help;
+  text-decoration:none; overflow-wrap:anywhere;
+}
+.term-trigger:hover, .term-trigger[aria-expanded="true"] { background:#dff6c9; color:#192416; }
+.term-trigger:focus-visible { outline:2px solid #397722; outline-offset:3px; }
+.term-help { color:#51614a; font-size:14px; line-height:1.7; margin:12px 0 24px; }
+.term-layer { position:fixed; inset:0; z-index:100; pointer-events:none; overflow:hidden; }
+.term-card {
+  position:fixed; z-index:2; box-sizing:border-box; min-width:0; width:280px;
+  padding:16px; margin:0; border:1px solid #7fa960; border-radius:10px;
+  background:#eff9e5; color:#1e2c19; font-size:16px; line-height:1.8; overflow-wrap:anywhere;
+  box-shadow:0 6px 22px #152e1326; pointer-events:auto; overflow-y:auto; overscroll-behavior:contain;
+}
+.term-card h3.term-card-title { margin:4px 28px 9px 0; font-size:20px; font-weight:750; line-height:1.35; color:#172714; }
+.term-card .term-card-label { font-size:12px; font-weight:600; color:#4a663c; }
+.term-card p.term-card-meaning { margin:0; font-size:16px; line-height:1.65; font-weight:450; color:#25341f; }
+.term-card .term-close {
+  position:absolute; right:10px; top:10px; width:30px; height:30px; padding:0; margin:0;
+  display:grid; place-items:center; border:1px solid #8da77d; border-radius:50%;
+  background:#fff; color:#24381c; font:22px/1 sans-serif; cursor:pointer;
+}
+.term-wire { position:absolute; z-index:1; inset:0; width:100%; height:100%; pointer-events:none; }
+.term-wire path { fill:none; stroke:#548d35; stroke-width:1.5; }
+.term-wire circle { fill:#548d35; }
+@media print { .term-trigger { border:0; } .term-layer, .term-help { display:none!important; } }

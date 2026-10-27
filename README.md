@@ -53,6 +53,11 @@ The HTML report is organized like a small review workspace: the goal and current
 
 ## Features
 
+- Inline term explanations: authored glossary words have a green underline. Click or press Enter/Space to open a connected card in an independent floating layer. It uses the right margin when space permits and stays inside the viewport on smaller screens, keeping the current term and fixed navigation visible. Opening, switching, and closing notes never resize, move, wrap, or reparent the original content. Long notes scroll inside the card. Esc, the close button, or an outside click dismisses it. Notes are offline, preserve source excerpts, and never change verification status.
+- Compact reading layout: related explanations sit side by side on wide screens, examples share a panel, and section spacing is reduced while key conclusions keep their larger type. Small screens return to one column.
+- Plain-language reading aids: a one-sentence explanation, why each block matters, a concrete example, a takeaway, and expandable terminology. The overview links directly to each block; implementation and acceptance details stay expandable. Examples explain behavior and never count as runtime evidence. Older review records remain supported.
+- Project-aware headings: `presentation.project_title` names the uploaded project; overview and code breakdown use different goal-versus-implementation descriptions. Preview cards follow the actual block count, show up to six blocks, and keep an overflow link when the project has more.
+
 - Define acceptance criteria from your goals before reviewing the implementation.
 - Explain functional blocks through inputs, processing, outputs, and upstream/downstream relationships.
 - Identify source files, symbols, line ranges, and relevant code excerpts.
@@ -135,6 +140,7 @@ npm install --no-save --package-lock=false playwright@1.56.1
 npx playwright install chromium
 node scripts/test_breakdown_browser.cjs review-output/code-breakdown.html review-output/browser
 node scripts/test_overview_browser.cjs review-output/reviewer-overview.html review-output/overview-browser
+node scripts/test_terms_browser.cjs review-output/reviewer-overview.html review-output/code-breakdown.html review-output/report.html
 node scripts/test_workflow_browser.cjs
 node scripts/test_page_navigation_browser.cjs
 ```
@@ -184,6 +190,11 @@ No open-source license is currently included. Rights and reuse permissions remai
 **颜色表示检查状态，不是文件质量评分：** 绿色为在所记录范围内实际验证通过，红色为有证据确认的问题，黄色为待核实，灰色为尚未验证。缺少运行条件时会明确说明，不会把静态阅读说成运行通过。
 
 ## 功能
+
+- 随文名词解释：实际用到的术语显示绿色下划线，点击或按 Enter / 空格后，在独立悬浮层显示解释卡并以连线指回原词。有空间时靠板块右侧，无侧边空间或在手机上时在视口内悬浮，避开当前词语和固定导航。打开、切换、关闭均不改变原方块和段落的位置、宽高、父子结构或文字换行；长解释在卡片内滚动。支持 Esc、关闭按钮和点击外部关闭。解释来自已填写的词表，支持同义写法和板块专用含义；源码片段保持原样，注释配色不改变验证结论。
+- 紧凑阅读排版：宽屏并排呈现相关说明和示例，减少重复的上下留白、卡片内边距与板块间距，保留重要结论的大字层级；手机恢复单列阅读。
+- 白话辅助阅读：每块可先讲一句话作用、为什么需要、小例子和记忆要点，专业词可展开解释。总览可直接跳到对应板块，技术实现与验收详情默认折叠；Markdown 同步保存讲解。示意例子不作为实际运行证据，旧记录仍兼容。
+- 项目化标题：`presentation.project_title` 用上传项目名称作为页面主标题；总览强调项目目标，代码拆解强调实现流程。右侧预览卡片按真实板块数生成，最多展示 6 块，超过时通过“完整目录”继续访问。
 
 - 先依据用户目标建立验收项，再按实际职责划分代码板块。
 - 默认生成独立的 `code-breakdown.html` 图文页面和 `code-breakdown.md` 文字版：逐块解释职责、输入输出、文件/符号/行号、源码片段、验证状态、证据和限制。

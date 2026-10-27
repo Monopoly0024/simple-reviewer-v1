@@ -1,0 +1,78 @@
+/* Keep emphasis on conclusions while bringing related explanations closer together. */
+body { line-height:1.65; }
+.page-hero { padding:36px 0 28px; gap:28px; align-items:start; }
+.hero-copy .hero-focus { margin-top:12px; }
+.hero-copy > .project-description { font-size:19px!important; line-height:1.65; }
+.document-stack { gap:10px; }
+.document-stack .document-head { padding:9px 14px; }
+.document-stack .document-body { padding:12px 14px; font-size:14px; line-height:1.6; }
+.document-stack .document-body h3 { font-size:18px; margin-bottom:6px; }
+.document-stack .document-body p { margin:6px 0 10px; }
+.hero-facts { margin:0 0 22px; padding:18px 0; }
+.hero-facts strong { font-size:21px; }
+.beginner-guide { margin:20px 0; padding:20px; }
+.beginner-guide h2 { margin:0 0 10px; font-size:26px; }
+.beginner-guide > p { margin:10px 0; }
+.beginner-route { gap:8px; }
+.beginner-route a { padding:10px 12px; }
+.catalog-section { padding:34px 0 26px; }
+.catalog-toolbar { margin:16px 0 14px; }
+.block-catalog { gap:14px; }
+.catalog-card { padding:16px 16px 0; }
+.catalog-card > p { margin:10px 0 14px; }
+.catalog-card-foot { padding:10px 0; }
+.block { padding:22px; margin-top:24px; }
+.block .block-heading { padding:18px 20px; margin-bottom:16px; gap:14px; }
+.block .block-heading h2 { font-size:clamp(25px,2.4vw,31px); }
+.block .block-no { width:40px; height:42px; }
+.block p { margin:10px 0; }
+.block h3 { margin:16px 0 7px; }
+.block .plain-intro { padding:14px 18px; margin:14px 0; }
+.block .plain-intro p { font-size:23px; line-height:1.6; margin:6px 0; }
+.block .key-points { padding:12px 18px; margin:12px 0; }
+.block .key-points h3, .block .plain-intro h3 { margin:0 0 6px; }
+.block .key-points ul { margin:4px 0; }
+.block .key-points li { font-size:20px; line-height:1.6; margin:4px 0; }
+.plain-notes { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px 24px; margin:12px 0; }
+.plain-notes .plain-note { min-width:0; }
+.plain-notes .plain-note h3 { margin:0 0 6px; font-size:17px; }
+.plain-notes .plain-note p { margin:0; }
+.reading-flow, .block .io { margin:16px 0; gap:12px; }
+.reading-flow > div, .block .io > div { padding:14px 16px; }
+.reading-flow p, .block .io p { margin:5px 0 0; }
+.block .steps, .block .mini-flow { margin:12px 0; gap:12px; }
+.block .steps li, .block .mini-step { padding:14px 16px; }
+.block .steps li p { margin:6px 0 0; }
+.block .example { padding:14px 18px; margin:16px 0; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px 20px; }
+.block .example > h3 { grid-column:1 / -1; margin:0; }
+.block .example > div:last-child, .block .example > p:last-child { grid-column:1 / -1; }
+.block .example p { margin:4px 0; }
+.block .takeaway { padding:10px 14px; margin:14px 0; }
+.block .local-glossary, .block .technical-details, .block .source, .block .evidence { margin:10px 0; }
+.block details > summary { padding:10px 14px; }
+.block .proof, .block .verification-summary, .block .callout { padding:14px 18px; margin:14px 0; }
+.block .facts { gap:12px; }
+.section { padding:36px 0; }
+.section-heading { margin-bottom:22px; }
+.context-section { margin-top:18px; padding:20px 0; }
+.context-section h2 { margin-bottom:12px; }
+.context-section h3 { margin:16px 0 7px; }
+.overview-main #goal, .overview-main #changes, .overview-main #next-actions { padding:20px; }
+.acceptance-list, .context-section .action-list { gap:14px; }
+.acceptance, .risk-card, .context-section .action-list li { padding:16px; }
+.acceptance p, .risk-card p { margin:8px 0; }
+.graph-panel { padding:20px; margin:16px 0; }
+.term-help { margin:10px 0 16px; }
+@media(min-width:1100px) { .page-hero { grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr); } }
+@media(max-width:700px) {
+  .page-hero { padding:24px 0 20px; gap:20px; }
+  .block { padding:16px; margin-top:18px; }
+  .block .block-heading { padding:14px; margin-bottom:14px; }
+  .block .block-heading h2 { font-size:24px; }
+  .block .plain-intro p { font-size:20px; }
+  .block .key-points li { font-size:18px; }
+  .plain-notes, .block .example { grid-template-columns:minmax(0,1fr); }
+  .plain-notes { gap:14px; }
+  .section { padding:26px 0; }
+  .reading-flow, .block .io { gap:8px; }
+}
